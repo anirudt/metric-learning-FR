@@ -1,33 +1,33 @@
-#Overall Idea:
+# Overall Idea:
 The idea is to use matrix perturbation theory to explain various methods of facial recognition and improve its background intuition.
 
 Use a single image for each individual, and try to modify it for simulating several scenarios and try to interpret the relative recognition accuraccuracies amongst them.
 
-#Immediate Next Day TODOs:
+# Immediate Next Day TODOs:
 - Code up a version of FR using EigenFaces
 - Try to work out the math for the PCA and Perturbation Theory and thus try to code it. Even if all this is in Matlab, it will do.
 - Get some papers based on Facial Deformation, how to deal with them and list all the possible kinds of cases possible in our scenario.
 
-#TODO:
+# TODO:
 - Prior Art establishment in the areas of *Face Recognition*, *Matrix Perturbation*, *Facial Deformation* and *Random Matrix Theory*.
 - Look for combinations of PCA and Perturbation Theory as well.
 - Search for relevant Facial Deformation Datasets.
 - Repositize papers accordingly.
 - Read through the requisite chapters for understanding the relevant material.
 
-#Papers:
+# Papers:
 - EigenFaces paper - (download from GMail)
 
-#DONE:
+# DONE:
 - Read through Wikipedia pages of EigenFaces and Matrix Perturbation Theory.
 - Went through the Research paper of EigenFaces by Turk and Pentland.
 - Went through rot1.pdf and the Testing/Experiment section of the EigenFaces Paper.
 
-#Idea:
+# Idea:
 - Start a primal understandable working version of EigenFaces in Matlab and Python. Try C for showing your prowess.
 - Categorize the face deformations and start devloping a separate module for each one of them
 - Start analysing for multi-resolution and extending a similar idea for it.
 
 
-#Unanswered Questions:
+# Unanswered Questions:
 - Over what parameter would we have to develop a PDF of the eigenvalues for the disturbances caused?

@@ -22,7 +22,7 @@ def nn(data):
     hidden_layer_1 = 10
     hidden_layer_2 = 10
     output_layer = 5
-    
+
     net = buildNetwork(input_nodes, hidden_layer_1, hidden_layer_2, output_layer, bias=True, hiddenclass=TanhLayer)
 
 if __name__ == '__main__':

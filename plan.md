@@ -14,6 +14,10 @@ Use a single image for each individual, and try to modify it for simulating seve
 - Search for relevant Facial Deformation Datasets.
 - Repositize papers accordingly.
 - Read through the requisite chapters for understanding the relevant material.
+- Preprocessing module should have:
+  - Face Detector System
+  - Place eyes at the same level, etc
+  - Pose Estimation definitely needs to be done, and binning a test image. Refer the pose.pdf for this.
 
 # Papers:
 - EigenFaces paper - (download from GMail)
@@ -22,6 +26,7 @@ Use a single image for each individual, and try to modify it for simulating seve
 - Read through Wikipedia pages of EigenFaces and Matrix Perturbation Theory.
 - Went through the Research paper of EigenFaces by Turk and Pentland.
 - Went through rot1.pdf and the Testing/Experiment section of the EigenFaces Paper.
+- Went through pose.pdf, the View-Specific EigenSpaces concept.
 
 # Idea:
 - Start a primal understandable working version of EigenFaces in Matlab and Python. Try C for showing your prowess.

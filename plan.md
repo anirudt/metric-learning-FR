@@ -1,7 +1,8 @@
 # Overall Idea:
-The idea is to use matrix perturbation theory to explain various methods of facial recognition and improve its background intuition.
+The idea is to use matrix perturbation theory to find the minimum size of the training set, and thus the minimum number of views. Try to estimate the bound of the intraclass separability. Go through materials for this and try to develop Perturbation Bounds.
+Read the newest version of the Face Recognition paper for better clarity. One possible ideology can be, assimilate as many views as necessary, and try training them, reduce the number of images, and keep plotting the accuracy as a function of the amount of training images that you take. This could lead to a fair amount of knowledge about the amount of information that you need to uniquely characterise an individual.
 
-Use a single image for each individual, and try to modify it for simulating several scenarios and try to interpret the relative recognition accuraccuracies amongst them.
+Use a single image for each individual, and try to modify it for simulating several scenarios and try to interpret the relative recognition accuracies amongst them.
 
 # Immediate Next Day TODOs:
 - Code up a version of FR using EigenFaces
@@ -14,6 +15,7 @@ Use a single image for each individual, and try to modify it for simulating seve
 - Search for relevant Facial Deformation Datasets.
 - Repositize papers accordingly.
 - Read through the requisite chapters for understanding the relevant material.
+- Establish differences between the template matching algorithm by Karhunen and Louvre.
 - Preprocessing module should have:
   - Face Detector System
   - Place eyes at the same level, etc
@@ -36,3 +38,4 @@ Use a single image for each individual, and try to modify it for simulating seve
 
 # Unanswered Questions:
 - Over what parameter would we have to develop a PDF of the eigenvalues for the disturbances caused?
+

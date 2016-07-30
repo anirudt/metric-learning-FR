@@ -39,6 +39,10 @@ def test(features, mean):
     test_face = np.dot(features, test_image)
 
     # TODO: Compute the features for all other people and then conduct a nearest neighbour.
+    similarity_feat = np.linalg.norm(features - test_face)
+
+    detected_idx = np.argmin(similarity_feat)
+    print "Detected face is of serial no. {0}".format(detected_idx)
 
 
 if __name__ == "__main__":

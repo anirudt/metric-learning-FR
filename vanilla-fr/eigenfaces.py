@@ -28,11 +28,20 @@ def train():
 
     features = np.dot(eigen_vecs, face_matrix)
     print features.shape
+    return features, mean
 
-def test():
-    """ TODO: """
+def test(features, mean):
+    """ Acquire a new image and get the data. """
+    test_image = np.resize(np.array(cv2.imread("", cv2.IMREAD_GRAYSCALE)), dims).ravel()
+
+    test_image -= mean
+
+    test_face = np.dot(features, test_image)
+
+    # TODO: Compute the features for all other people and then conduct a nearest neighbour.
+
 
 if __name__ == "__main__":
-    train()
-    test()
+    features, mean = train()
+    test(features, mean)
     print "We are done."

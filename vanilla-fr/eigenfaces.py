@@ -18,6 +18,23 @@ Some helper functions need to be written for better analysis.
 NUM_IMGS     = 10
 dims         = (100, 100)
 
+"""
+Some helper functions.
+"""
+def display_imgs(face_matrix):
+    """
+    TODO: Reshape, quantise and display the images in a subplot fashion.
+    http://stackoverflow.com/questions/17111525/how-to-show-multiple-images-in-one-figure
+    """
+
+def eigen_logger(eigen_vals, eigen_vecs):
+    
+    """
+    TODO: Identify the class of photos and place the eigenvalues and eigenvectors in a fairly understandable
+    data structure. Also, try to plot the eigenvalue projections across all data fitted hitherto.
+    Things to save: del A, del (eig_vals A), del (eig_vecs A)
+    """
+
 def train():
     """ Get data, train, get the Eigenvalues and store them."""
     face_matrix = np.array([ np.resize(np.array(cv2.imread("data/ROLL ("+str(num)+")/Regular/W (2).jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel() for num in range(1, NUM_IMGS+1) ], dtype='float64')

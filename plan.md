@@ -24,6 +24,7 @@ Use a single image for each individual, and try to modify it for simulating seve
 # Papers:
 - EigenFaces paper - (download from GMail)
 - (This paper)[paper/bounds_docs.pdf] gives a thorough understanding of the eigen value perturbation bounds in case of an varied cases.
+- (rigorous_perturbations.pdf) gives a good understanding of the mathematical treatment of the perturbation bounds like Bauer Fike, etc. along with an example.
 
 # DONE:
 - Read through Wikipedia pages of EigenFaces and Matrix Perturbation Theory.

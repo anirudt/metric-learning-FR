@@ -7,6 +7,13 @@ import pdb
 
 """ Script for EigenFace Method of Face Recognition """
 
+"""
+TODO:
+Some helper functions need to be written for better analysis.
+1. An automated function for displaying the set of images in a subplot, followed by the graphify function.
+2. Compute the eigenvectors and analyse them -- compare, visualize and save them.
+"""
+
 
 NUM_IMGS     = 10
 dims         = (100, 100)
@@ -20,14 +27,6 @@ def train():
     print mean.shape
     face_matrix -= mean
 
-    """
-    pca = PCA(n_components=10)
-    pca.fit(face_matrix.T)
-    print "Displaying the EigenValues selected: {0}".format(pca.explained_variance_ratio_)
-    eigen_vals = pca.explained_variance_ratio_
-    eigen_vecs = pca.components_
-
-    """
     print face_matrix.shape
     cov = np.matrix(face_matrix) * np.matrix(face_matrix.T)
     cov /= NUM_IMGS
@@ -54,7 +53,7 @@ def train():
 
 def test(eigen_vecs, weights, mean):
     """ Acquire a new image and get the data. """
-    test_image = np.resize(np.array(cv2.imread("data/ROLL (7)/Regular/W (2).jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
+    test_image = np.resize(np.array(cv2.imread("data/ROLL (9)/Regular/W (2).jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
 
     test_image -= mean
 

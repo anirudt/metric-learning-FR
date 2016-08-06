@@ -16,8 +16,10 @@ Some helper functions need to be written for better analysis.
 """
 
 
-NUM_IMGS     = 10
-dims         = (100, 100)
+NUM_IMGS         = 10
+IMGS_PER_PERSON  = 1
+NUM_PEOPLE       = NUM_IMGS / IMGS_PER_PERSON
+dims             = (100, 100)
 
 """
 Some helper functions.
@@ -41,30 +43,61 @@ def eigen_logger(eigen_vals, eigen_vecs):
         writer = csv.writer(f)
         writer.writerows(eigen_vecs)
 
-
-def train(tilt_idx):
-    """ Get data, train, get the Eigenvalues and store them."""
+def import_training_set():
+    """ Get the face matrix here. """
     face_matrix = np.array([ np.resize(np.array(cv2.imread("data/ROLL ("+str(num)+")/Regular/W ("+str(tilt_idx)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel() for num in range(1, NUM_IMGS+1) ], dtype='float64')
+    face_matrix = face_matrix.T
     print "The dimensions of the face matrix are: {0}".format(face_matrix.shape)
 
-    mean = np.mean(face_matrix, axis=0)
-    print mean.shape
+    mean = np.mean(face_matrix, axis=1)
+    print "The dimensions of the mean face are: {0}".format(mean)
+
+    # TODO: Make a way to print / imwrite this average image
     face_matrix -= mean
 
-    print face_matrix.shape
-    cov = np.matrix(face_matrix) * np.matrix(face_matrix.T)
-    cov /= NUM_IMGS
-    print cov.shape
+    return face_matrix
+
+def lda(eigen_face):
+    """ Computes the LDA in the specified subspace provided. """
+    #TODO: COmpute the individual class means
+    class_means = np.zeros(NUM_PEOPLE, eigen_face.shape[1])
+    for i in range(NUM_PEOPLE):
+        class_means[:,i] = np.mean(eigen_face[:,i*IMGS_PER_PERSON:i*IMGS_PER_PERSON+3], axis=1)
+
+    within_class_cov = np.matrix(eigen_face - mean_eigen_face) * np.matrix((eigen_face - mean_eigen_face).T)
+
+    between_class_cov = np.matrix(mean_eigen_face) * np.matrix(mean_eigen_face)
+
+
+def pca(X, A):
+    """ Computes the PCA of:
+        X: covariance matrix
+        A: difference matrix
+    """
     eigen_vals, eigen_vecs = np.linalg.eig(cov)
     eigen_vals = np.abs(eigen_vals)
     sort_indices = eigen_vals.argsort()[::-1]
     eigen_vals = eigen_vals[sort_indices]
     eigen_vecs = eigen_vecs[sort_indices]
-
     print eigen_vecs.shape, eigen_vals.shape
     print eigen_vecs, eigen_vals
-
     # TODO: Conduct slicing.
+    selected_eigen_vecs = np.matrix(A) * np.matrix(eigen_vecs)
+    eigen_face_space = np.matrix(selected_eigen_vecs.T) * np.matrix(A)
+    return eigen_face_space
+
+
+
+def train(tilt_idx):
+    """ Get data, train, get the Eigenvalues and store them."""
+    face_matrix = import_training_set()
+
+    print face_matrix.shape
+    cov = np.matrix(face_matrix.T) * np.matrix(face_matrix)
+    cov /= NUM_IMGS
+    print cov.shape
+
+    eigen_face_space = pca(face_matrix, cov)
 
     eigen_vecs = np.matrix(eigen_vecs) * np.matrix(face_matrix)
     norms = np.linalg.norm(eigen_vecs, axis=0)

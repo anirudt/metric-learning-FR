@@ -17,7 +17,7 @@ Some helper functions need to be written for better analysis.
 
 
 NUM_IMGS         = 10
-IMGS_PER_PERSON  = 1
+IMGS_PER_PERSON  = 2
 NUM_PEOPLE       = NUM_IMGS / IMGS_PER_PERSON
 dims             = (100, 100)
 
@@ -59,14 +59,27 @@ def import_training_set():
 
 def lda(eigen_face):
     """ Computes the LDA in the specified subspace provided. """
-    #TODO: COmpute the individual class means
-    class_means = np.zeros(NUM_PEOPLE, eigen_face.shape[1])
+    class_means = np.zeros(eigen_face.shape[0], NUM_PEOPLE)
+    within_class_cov = np.zeros(eigen_face.shape[0], eigen_face.shape[0])
+    between_class_cov = np.zeros(eigen_face.shape[0], eigen_face.shape[0])
     for i in range(NUM_PEOPLE):
-        class_means[:,i] = np.mean(eigen_face[:,i*IMGS_PER_PERSON:i*IMGS_PER_PERSON+3], axis=1)
+        class_means[:,i] = np.mean(eigen_face[:,i*IMGS_PER_PERSON:i*IMGS_PER_PERSON+IMGS_PER_PERSON], axis=1)
 
-    within_class_cov = np.matrix(eigen_face - mean_eigen_face) * np.matrix((eigen_face - mean_eigen_face).T)
+    overall_mean = np.mean(class_means, axis=1)
+    for i in range(NUM_PEOPLE):
+        class_mean_i = class_means[:, i]
+        class_mat = eigen_face[:, i*IMGS_PER_PERSON:(i+1)*IMGS_PER_PERSON] - class_means
+        within_class_cov += np.matrix(class_mat) * np.matrix(class_mat.T)
 
-    between_class_cov = np.matrix(mean_eigen_face) * np.matrix(mean_eigen_face)
+        between_class_cov += np.matrix(class_mean_i - overall_mean) * np.matrix((class_mean_i - overall_mean).T)
+
+    print "Dimensions of within class scatter matrix are {0}".format(within_class_cov.shape)
+    print "Dimensions of between class scatter matrix are {0}".format(between_class_cov.shape)
+
+    eigen_vals, eigen_vecs = np.linalg.eig(np.matrix(np.linalg.inv(within_class_cov)) * np.matrix(between_class_cov))
+
+    # TODO: Determine the dimensions of the eigenvector and choose the appropriate projection.
+
 
 
 def pca(X, A):

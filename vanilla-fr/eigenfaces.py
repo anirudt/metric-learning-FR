@@ -57,7 +57,7 @@ def import_training_set():
     for col in range(face_matrix.shape[1]):
         face_matrix[:, col] = face_matrix[:, col] - mean
 
-    return face_matrix
+    return face_matrix, mean
 
 def lda(eigen_face):
     """ Computes the LDA in the specified subspace provided. """
@@ -114,7 +114,7 @@ def pca(X, A):
 
 def train(tilt_idx):
     """ Get data, train, get the Eigenvalues and store them."""
-    face_matrix = import_training_set()
+    face_matrix, mean_face = import_training_set()
 
     print face_matrix.shape
     cov = np.matrix(face_matrix.T) * np.matrix(face_matrix)
@@ -126,20 +126,14 @@ def train(tilt_idx):
     # TODO: Return something
     lda_projection = lda(eigen_face_space)
 
-    eigen_vecs = np.matrix(eigen_vecs) * np.matrix(face_matrix)
-    norms = np.linalg.norm(eigen_vecs, axis=0)
-    eigen_vecs /= norms
+    return lda_projection, mean_face
 
-    weights = np.matrix(face_matrix) * np.matrix(eigen_vecs.T)
-    print weights.shape
-    #pdb.set_trace()
-    return eigen_vals, eigen_vecs, weights, mean
-
-def test(tilt_idx, eigen_vecs, weights, mean):
+def test(tilt_idx, lda_projection, mean_face):
     """ Acquire a new image and get the data. """
     test_image = np.resize(np.array(cv2.imread("data/ROLL (9)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
+    test_image = test_image.T
 
-    test_image -= mean
+    test_image -= mean_face
 
     # TODO: Compute the features for all other people and then conduct a nearest neighbour.
     print eigen_vecs.shape, test_image.shape
@@ -158,8 +152,8 @@ def multi_runner():
     """
     eigenvals, eigenvecs = [], []
     for tilt_idx in range(3, 8):
-        tmp_eigen_vals, tmp_eigen_vecs, tmp_weights, tmp_mean = train(tilt_idx)
-        test(tilt_idx, tmp_eigen_vecs, tmp_weights, tmp_mean)
+        lda_projection, mean_face = train(tilt_idx)
+        test(tilt_idx, lda_projection, mean_face)
         eigenvals.append(tmp_eigen_vals)
         eigenvecs.append(tmp_eigen_vecs)
     eigenvecs = np.array(eigenvecs)

@@ -16,7 +16,7 @@ Some helper functions need to be written for better analysis.
 """
 
 
-NUM_IMGS     = 10
+NUM_IMGS     = 40
 dims         = (100, 100)
 
 """
@@ -34,13 +34,13 @@ def eigen_logger(eigen_vals, eigen_vecs):
     data structure. Also, try to plot the eigenvalue projections across all data fitted hitherto.
     Things to save: del A, del (eig_vals A), del (eig_vecs A)
     """
+    pdb.set_trace()
     with open("eigen_vals.csv", "wb") as f:
         writer = csv.writer(f)
-        writer.writerows(eigen_vals)
+        writer.writerows(eigen_vals.tolist())
     with open("eigen_vecs.csv", "wb") as f:
         writer = csv.writer(f)
-        writer.writerows(eigen_vecs)
-
+        writer.writerows(eigen_vecs.tolist())
 
 def train(tilt_idx):
     """ Get data, train, get the Eigenvalues and store them."""
@@ -58,10 +58,11 @@ def train(tilt_idx):
     eigen_vals, eigen_vecs = np.linalg.eig(cov)
     eigen_vals = np.abs(eigen_vals)
     sort_indices = eigen_vals.argsort()[::-1]
-    eigen_vals = eigen_vals[sort_indices]
-    eigen_vecs = eigen_vecs[sort_indices]
+    eigen_vals = eigen_vals[sort_indices[0:10]]
+    eigen_vecs = eigen_vecs[sort_indices[0:10]]
 
     print eigen_vecs.shape, eigen_vals.shape
+    print "Haha"
     print eigen_vecs, eigen_vals
 
     # TODO: Conduct slicing.
@@ -77,7 +78,7 @@ def train(tilt_idx):
 
 def test(tilt_idx, eigen_vecs, weights, mean):
     """ Acquire a new image and get the data. """
-    test_image = np.resize(np.array(cv2.imread("data/ROLL (9)/Regular/W ("+str(tilt_idx)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
+    test_image = np.resize(np.array(cv2.imread("data/ROLL (9)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
 
     test_image -= mean
 
@@ -97,12 +98,15 @@ def multi_runner():
     Runs the training and test for all the different tilted faces. Returns a list of lists of eigenvalues and eigenvectors.
     """
     eigenvals, eigenvecs = [], []
-    for tilt in range(5):
+    for tilt_idx in range(3, 8):
         tmp_eigen_vals, tmp_eigen_vecs, tmp_weights, tmp_mean = train(tilt_idx)
         test(tilt_idx, tmp_eigen_vecs, tmp_weights, tmp_mean)
         eigenvals.append(tmp_eigen_vals)
         eigenvecs.append(tmp_eigen_vecs)
-    return eigen_vals, eigen_vecs
+    eigenvecs = np.array(eigenvecs)
+    eigenvals = np.array(eigenvals)
+    print eigenvals, eigenvecs
+    return eigenvals, eigenvecs
 
 
 if __name__ == "__main__":

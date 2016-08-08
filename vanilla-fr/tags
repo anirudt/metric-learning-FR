@@ -1,0 +1,18 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+IMGS_PER_PERSON	eigenfaces.py	/^IMGS_PER_PERSON  = 2$/;"	v
+NUM_IMGS	eigenfaces.py	/^NUM_IMGS         = 10$/;"	v
+NUM_PEOPLE	eigenfaces.py	/^NUM_PEOPLE       = NUM_IMGS \/ IMGS_PER_PERSON$/;"	v
+dims	eigenfaces.py	/^dims             = (100, 100)$/;"	v
+display_imgs	eigenfaces.py	/^def display_imgs(face_matrix):$/;"	f
+eigen_logger	eigenfaces.py	/^def eigen_logger(eigen_vals, eigen_vecs):$/;"	f
+import_training_set	eigenfaces.py	/^def import_training_set():$/;"	f
+lda	eigenfaces.py	/^def lda(eigen_face):$/;"	f
+multi_runner	eigenfaces.py	/^def multi_runner():$/;"	f
+pca	eigenfaces.py	/^def pca(X, A):$/;"	f
+test	eigenfaces.py	/^def test(tilt_idx, lda_projection, mean_face, selected_eigen_vecs):$/;"	f
+train	eigenfaces.py	/^def train(tilt_idx):$/;"	f

@@ -36,7 +36,7 @@ def eigen_logger(eigen_vals, eigen_vecs):
     data structure. Also, try to plot the eigenvalue projections across all data fitted hitherto.
     Things to save: del A, del (eig_vals A), del (eig_vecs A)
     """
-    pdb.set_trace()
+    #pdb.set_trace()
     with open("eigen_vals.csv", "wb") as f:
         writer = csv.writer(f)
         writer.writerows(eigen_vals.tolist())
@@ -50,6 +50,7 @@ def nearest_neighbour(projs, test_proj):
     # distances = np.linalg.norm(projs - test_proj, axis=1)
     for col in range(projs.shape[1]):
         distances[col] = np.linalg.norm((projs[:, col] - test_proj))
+    print "Closest neighbour is {0}".format(distances)
     return np.argmin(distances)
 
 def import_training_set():
@@ -88,6 +89,8 @@ def lda(eigen_face):
         print diff_mat.shape
         between_class_cov += np.matrix(diff_mat) * np.matrix(diff_mat.T)
 
+    within_class_cov /= 1.0*NUM_PEOPLE
+    between_class_cov /= 1.0*NUM_PEOPLE
     print "Dimensions of within class scatter matrix are {0}".format(within_class_cov.shape)
     print "Dimensions of between class scatter matrix are {0}".format(between_class_cov.shape)
 
@@ -97,6 +100,8 @@ def lda(eigen_face):
     lda_projection = np.matrix(eigen_vecs.T) * np.matrix(eigen_face)
 
     print "The dimensions of the LDA projection are {0}".format(lda_projection.shape)
+
+    pdb.set_trace()
 
     return lda_projection, eigen_vecs
 
@@ -117,6 +122,8 @@ def pca(X, A):
     print eigen_vecs, eigen_vals
     # TODO: Conduct slicing.
     selected_eigen_vecs = np.matrix(A) * np.matrix(eigen_vecs)
+    norms = np.linalg.norm(selected_eigen_vecs, axis=0)
+    selected_eigen_vecs /= norms
     eigen_face_space = np.matrix(selected_eigen_vecs.T) * np.matrix(A)
     return selected_eigen_vecs, eigen_face_space
 
@@ -138,13 +145,15 @@ def train(tilt_idx):
 
 def test(tilt_idx, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda):
     """ Acquire a new image and get the data. """
-    test_image = np.resize(np.array(cv2.imread("data/ROLL (9)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
+    test_image = np.resize(np.matrix(cv2.imread("data/ROLL (9)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
     test_image = test_image.T
 
     test_image -= mean_face
 
     # PCA-Transform the image
-    pca_test_proj = np.matrix(selected_eigen_vecs_pca.T) * np.matrix(test_image)
+    #pdb.set_trace()
+    print selected_eigen_vecs_pca.T.shape, test_image.shape
+    pca_test_proj = np.matrix(selected_eigen_vecs_pca.T) * np.matrix(test_image).T
 
     # LDA-Transform the PCA subspace
     lda_test_proj = np.matrix(selected_eigen_vecs_lda.T) * np.matrix(pca_test_proj)
@@ -163,15 +172,18 @@ def multi_runner():
     for tilt_idx in range(3, 8):
         lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda = train(tilt_idx)
         test(tilt_idx, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda)
+        """
         eigenvals.append(tmp_eigen_vals)
         eigenvecs.append(tmp_eigen_vecs)
     eigenvecs = np.array(eigenvecs)
     eigenvals = np.array(eigenvals)
     print eigenvals, eigenvecs
     return eigenvals, eigenvecs
+    """
+    return 0
 
 
 if __name__ == "__main__":
-    eigen_vals, eigen_vecs = multi_runner()
-    eigen_logger(eigen_vals, eigen_vecs)
+    multi_runner()
+    #eigen_logger(eigen_vals, eigen_vecs)
     print "We are done."

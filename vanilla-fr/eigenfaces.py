@@ -44,6 +44,14 @@ def eigen_logger(eigen_vals, eigen_vecs):
         writer = csv.writer(f)
         writer.writerows(eigen_vecs.tolist())
 
+def nearest_neighbour(projs, test_proj):
+    distances = np.zeros((projs.shape[1], 1))
+    # Alternatively, you could also try the following line.
+    # distances = np.linalg.norm(projs - test_proj, axis=1)
+    for col in range(projs.shape[1]):
+        distances[col] = np.linalg.norm((projs[:, col] - test_proj))
+    return np.argmin(distances)
+
 def import_training_set():
     """ Get the face matrix here. """
     face_matrix = np.array([ np.resize(np.array(cv2.imread("data/ROLL ("+str(num)+")/Regular/W ("+str(tilt_idx)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel() for num in range(1, NUM_IMGS+1) for tilt_idx in range(2,3)], dtype='float64')
@@ -90,7 +98,7 @@ def lda(eigen_face):
 
     print "The dimensions of the LDA projection are {0}".format(lda_projection.shape)
 
-    return lda_projection
+    return lda_projection, eigen_vecs
 
 def pca(X, A):
     """ Computes the PCA of:
@@ -110,7 +118,7 @@ def pca(X, A):
     # TODO: Conduct slicing.
     selected_eigen_vecs = np.matrix(A) * np.matrix(eigen_vecs)
     eigen_face_space = np.matrix(selected_eigen_vecs.T) * np.matrix(A)
-    return eigen_face_space
+    return selected_eigen_vecs, eigen_face_space
 
 def train(tilt_idx):
     """ Get data, train, get the Eigenvalues and store them."""
@@ -121,28 +129,29 @@ def train(tilt_idx):
     cov /= NUM_IMGS
     print cov.shape
 
-    eigen_face_space = pca(cov, face_matrix)
+    selected_eigen_vecs_pca, eigen_face_space = pca(cov, face_matrix)
 
     # TODO: Return something
-    lda_projection = lda(eigen_face_space)
+    lda_projection, selected_eigen_vecs_lda = lda(eigen_face_space)
 
-    return lda_projection, mean_face
+    return lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda
 
-def test(tilt_idx, lda_projection, mean_face):
+def test(tilt_idx, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda):
     """ Acquire a new image and get the data. """
     test_image = np.resize(np.array(cv2.imread("data/ROLL (9)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
     test_image = test_image.T
 
     test_image -= mean_face
 
-    # TODO: Compute the features for all other people and then conduct a nearest neighbour.
-    print eigen_vecs.shape, test_image.shape
-    proj_weights = np.dot(eigen_vecs, test_image)
+    # PCA-Transform the image
+    pca_test_proj = np.matrix(selected_eigen_vecs_pca.T) * np.matrix(test_image)
 
-    
-    similarity_feat = np.linalg.norm(weights - proj_weights, axis=1)
-    print similarity_feat
-    detected_idx = np.argmin(similarity_feat)
+    # LDA-Transform the PCA subspace
+    lda_test_proj = np.matrix(selected_eigen_vecs_lda.T) * np.matrix(pca_test_proj)
+
+    # Trying out the nearest neighbour for classification
+    detected_idx = nearest_neighbour(lda_projection, lda_test_proj)
+
     print "Detected face is of serial no. {0}".format(detected_idx+1)
     ##pdb.set_trace()
 
@@ -152,8 +161,8 @@ def multi_runner():
     """
     eigenvals, eigenvecs = [], []
     for tilt_idx in range(3, 8):
-        lda_projection, mean_face = train(tilt_idx)
-        test(tilt_idx, lda_projection, mean_face)
+        lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda = train(tilt_idx)
+        test(tilt_idx, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda)
         eigenvals.append(tmp_eigen_vals)
         eigenvecs.append(tmp_eigen_vecs)
     eigenvecs = np.array(eigenvecs)

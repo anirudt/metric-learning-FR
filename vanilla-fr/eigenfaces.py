@@ -95,13 +95,21 @@ def lda(eigen_face):
     print "Dimensions of between class scatter matrix are {0}".format(between_class_cov.shape)
 
     eigen_vals, eigen_vecs = np.linalg.eig(np.matrix(np.linalg.inv(within_class_cov)) * np.matrix(between_class_cov))
+    #pdb.set_trace()
     # TODO: Select only some components based on some selection theory
+    sort_indices = np.abs(eigen_vals).argsort()[::-1]
+    eigen_vecs = eigen_vecs.T
+    #pdb.set_trace()
+    eigen_vals = eigen_vals[sort_indices[0:4]]
+    eigen_vecs = eigen_vecs[sort_indices[0:4]]
+    eigen_vecs = eigen_vecs.T
+    print eigen_vecs.T.shape, eigen_face.shape
 
     lda_projection = np.matrix(eigen_vecs.T) * np.matrix(eigen_face)
 
     print "The dimensions of the LDA projection are {0}".format(lda_projection.shape)
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
     return lda_projection, eigen_vecs
 
@@ -112,12 +120,14 @@ def pca(X, A):
     """
     eigen_vals, eigen_vecs = np.linalg.eig(X)
     eigen_vals = np.abs(eigen_vals)
+    eigen_vecs = eigen_vecs.T
     sort_indices = eigen_vals.argsort()[::-1]
     eigen_vals = eigen_vals[sort_indices[0:10]]
     eigen_vecs = eigen_vecs[sort_indices[0:10]]
+    eigen_vecs = eigen_vecs.T
 
-    eigen_vals = eigen_vals[sort_indices]
-    eigen_vecs = eigen_vecs[sort_indices]
+    #eigen_vals = eigen_vals[sort_indices]
+    #eigen_vecs = eigen_vecs[sort_indices]
     print eigen_vecs.shape, eigen_vals.shape
     print eigen_vecs, eigen_vals
     # TODO: Conduct slicing.
@@ -145,7 +155,7 @@ def train(tilt_idx):
 
 def test(tilt_idx, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda):
     """ Acquire a new image and get the data. """
-    test_image = np.resize(np.matrix(cv2.imread("data/ROLL (9)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
+    test_image = np.resize(np.matrix(cv2.imread("data/ROLL (8)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
     test_image = test_image.T
 
     test_image -= mean_face

@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 import cv2
 import pdb
 import csv
+from classifier import PCA
 
 """ Script for EigenFace Method of Face Recognition """
 
@@ -142,18 +143,20 @@ def train(tilt_idx):
     face_matrix, mean_face = import_training_set()
 
     print face_matrix.shape
+    """
     cov = np.matrix(face_matrix.T) * np.matrix(face_matrix)
     cov /= NUM_IMGS
     print cov.shape
-
-    selected_eigen_vecs_pca, eigen_face_space = pca(cov, face_matrix)
+    """
+    pca = PCA()
+    selected_eigen_vecs_pca, eigen_face_space = pca.fit(face_matrix, NUM_IMGS)
 
     # TODO: Return something
     lda_projection, selected_eigen_vecs_lda = lda(eigen_face_space)
 
-    return lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda
+    return pca, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda
 
-def test(tilt_idx, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda):
+def test(tilt_idx, lda_projection, mean_face, pca, selected_eigen_vecs_pca, selected_eigen_vecs_lda):
     """ Acquire a new image and get the data. """
     test_image = np.resize(np.matrix(cv2.imread("data/ROLL (8)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
     test_image = test_image.T
@@ -163,7 +166,7 @@ def test(tilt_idx, lda_projection, mean_face, selected_eigen_vecs_pca, selected_
     # PCA-Transform the image
     #pdb.set_trace()
     print selected_eigen_vecs_pca.T.shape, test_image.shape
-    pca_test_proj = np.matrix(selected_eigen_vecs_pca.T) * np.matrix(test_image).T
+    pca_test_proj = pca.transform(test_image)
 
     # LDA-Transform the PCA subspace
     lda_test_proj = np.matrix(selected_eigen_vecs_lda.T) * np.matrix(pca_test_proj)
@@ -180,8 +183,8 @@ def multi_runner():
     """
     eigenvals, eigenvecs = [], []
     for tilt_idx in range(3, 8):
-        lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda = train(tilt_idx)
-        test(tilt_idx, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda)
+        pca, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda = train(tilt_idx)
+        test(tilt_idx, lda_projection, mean_face, pca, selected_eigen_vecs_pca, selected_eigen_vecs_lda)
         """
         eigenvals.append(tmp_eigen_vals)
         eigenvecs.append(tmp_eigen_vecs)

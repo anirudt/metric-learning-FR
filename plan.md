@@ -41,3 +41,5 @@ Use a single image for each individual, and try to modify it for simulating seve
 # Unanswered Questions:
 - Over what parameter would we have to develop a PDF of the eigenvalues for the disturbances caused?
 
+# Resources:
+- Unit testing: http://docs.python-guide.org/en/latest/writing/tests/

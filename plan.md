@@ -5,9 +5,13 @@ Read the newest version of the Face Recognition paper for better clarity. One po
 Use a single image for each individual, and try to modify it for simulating several scenarios and try to interpret the relative recognition accuracies amongst them.
 
 # Immediate Next Day TODOs:
-- Code up a version of FR using EigenFaces
-- Try to work out the math for the PCA and Perturbation Theory and thus try to code it. Even if all this is in Matlab, it will do.
-- Get some papers based on Facial Deformation, how to deal with them and list all the possible kinds of cases possible in our scenario.
+- Testing of PCA, LDA system separately using nearest neighbour methods.
+- Get preprocessing work using SIFT and LBP.
+- Implementations of SVM, kNN.
+- Implementation of LMNN for a first hand impression of how good this distance metric learning method is. Also, *consolidate all evidence* to prove that these methods are different from inherent similar techniques like the LDA or SVM.
+
+# Things Done:
+- PCA, LDA classful implementation.
 
 # TODO:
 - Prior Art establishment in the areas of *Face Recognition*, *Matrix Perturbation*, *Facial Deformation* and *Random Matrix Theory*.
@@ -22,6 +26,7 @@ Use a single image for each individual, and try to modify it for simulating seve
   - Pose Estimation definitely needs to be done, and binning a test image. Refer the pose.pdf for this.
 
 # Papers:
+- All @ papers/
 - EigenFaces paper - (download from GMail)
 - (This paper)[paper/bounds_docs.pdf] gives a thorough understanding of the eigen value perturbation bounds in case of an varied cases.
 - (rigorous_perturbations.pdf) gives a good understanding of the mathematical treatment of the perturbation bounds like Bauer Fike, etc. along with an example.

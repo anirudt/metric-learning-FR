@@ -1,6 +1,7 @@
 import numpy as np
 import pdb
 import logging
+from skimage.feature import local_binary_pattern
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -102,3 +103,11 @@ class LDA:
         """ Function to apply given test data on the created LDA model """
         self.test_proj = np.matrix(self.eigen_vecs.T) * np.matrix(y)
         return self.test_proj
+
+class LBP:
+    """Class to abstract implementation of LBP"""
+    def __init__(self, image):
+        radius = 2
+        n_points = 8*radius
+        self.lbp = local_binary_pattern(image, radius, n_components, METHOD)
+

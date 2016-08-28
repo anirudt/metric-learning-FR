@@ -107,7 +107,20 @@ class LDA:
 class LBP:
     """Class to abstract implementation of LBP"""
     def __init__(self, image):
-        radius = 2
-        n_points = 8*radius
-        self.lbp = local_binary_pattern(image, radius, n_components, METHOD)
+        self.radius = 1
+        self.n_points = 8*1
+        self.model = cv2.createLBPHFaceRecognizer(self.radius,
+                self.n_points)
 
+    def train(self, features, labels):
+        return self.model.train(features, labels)
+
+    def predict(self, y_test):
+        """ Uses a nearest neighbour to find the class label """
+        return self.model.predict(test)
+
+    def save(self, filename):
+        return self.model.save(filename)
+
+    def load(self.filename):
+        return self.model.load(filename)

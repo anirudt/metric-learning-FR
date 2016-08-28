@@ -57,6 +57,7 @@ def nearest_neighbour(projs, test_proj):
 def import_training_set():
     """ Get the face matrix here. """
     face_matrix = np.array([ np.resize(np.array(cv2.imread("data/ROLL ("+str(num)+")/Regular/W ("+str(tilt_idx)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel() for num in range(1, NUM_IMGS+1) for tilt_idx in range(2,3)], dtype='float64')
+    labels = [num for i in range(IMGS_PER_PERSON) for num in range(1,NUM_IMGS+1)]
     face_matrix = face_matrix.T
     print "The dimensions of the face matrix are: {0}".format(face_matrix.shape)
 
@@ -67,7 +68,7 @@ def import_training_set():
     for col in range(face_matrix.shape[1]):
         face_matrix[:, col] = face_matrix[:, col] - mean
 
-    return face_matrix, mean
+    return face_matrix, mean, labels
 
 def lda(eigen_face):
     """ Computes the LDA in the specified subspace provided. """
@@ -140,7 +141,7 @@ def pca(X, A):
 
 def train(tilt_idx):
     """ Get data, train, get the Eigenvalues and store them."""
-    face_matrix, mean_face = import_training_set()
+    face_matrix, mean_face, labels = import_training_set()
 
     print face_matrix.shape
     """

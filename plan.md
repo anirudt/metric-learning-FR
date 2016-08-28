@@ -6,12 +6,14 @@ Use a single image for each individual, and try to modify it for simulating seve
 
 # Immediate Next Day TODOs:
 - Testing of PCA, LDA system separately using nearest neighbour methods.
-- Get preprocessing work using SIFT and LBP.
+- Get preprocessing work using SIFT.
+- Integration Testing scripts.
 - Implementations of SVM, kNN.
 - Implementation of LMNN for a first hand impression of how good this distance metric learning method is. Also, *consolidate all evidence* to prove that these methods are different from inherent similar techniques like the LDA or SVM.
 
 # Things Done:
 - PCA, LDA classful implementation.
+- LBP Classful implementation.
 
 # TODO:
 - Prior Art establishment in the areas of *Face Recognition*, *Matrix Perturbation*, *Facial Deformation* and *Random Matrix Theory*.

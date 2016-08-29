@@ -1,5 +1,6 @@
 import numpy as np
 import pdb
+import cv2
 import logging
 from skimage.feature import local_binary_pattern
 
@@ -39,6 +40,7 @@ class PCA:
         norms = np.linalg.norm(self.selected_eigen_vecs, axis=0)
         self.selected_eigen_vecs /= norms
         self.A_space = np.matrix(self.selected_eigen_vecs.T) * np.matrix(A)
+        # Need to return values to be used in cascaded classifier systems
         return self.selected_eigen_vecs, self.A_space
 
     def transform(self, y):
@@ -56,6 +58,7 @@ class LDA:
         self.test_proj = None
     
     def fit(self, A, n_classes, n_components):
+        """ Check if you really need to specify the n_classes as another argument"""
         num_imgs = A.shape[1]
         imgs_per_person = num_imgs / n_classes
         class_means = np.zeros((A.shape[0], n_classes))
@@ -74,7 +77,6 @@ class LDA:
             within_class_cov += np.matrix(class_mat) * np.matrix(class_mat.T)
 
             diff_mat = (class_mean_i - overall_mean).reshape((A.shape[0], 1))
-            print diff_mat.shape
             between_class_cov += np.matrix(diff_mat) * np.matrix(diff_mat.T)
 
         within_class_cov /= 1.0*n_classes
@@ -97,7 +99,8 @@ class LDA:
 
         logging.debug("The dimensions of the LDA projection are {0}".format(self.lda_projection.shape))
 
-        return self.lda_projection, self.eigen_vecs
+        # Need to return the values to be used in cascaded classifier systems
+        return self.eigen_vecs, self.lda_projection
 
     def transform(self, y):
         """ Function to apply given test data on the created LDA model """
@@ -106,11 +109,12 @@ class LDA:
 
 class LBP:
     """Class to abstract implementation of LBP"""
-    def __init__(self, image):
+    def __init__(self):
         self.radius = 1
         self.n_points = 8*1
-        self.model = cv2.createLBPHFaceRecognizer(self.radius,
-                self.n_points)
+        #self.model = cv2.createLBPHFaceRecognizer(self.radius,
+                #self.n_points)
+        self.model = None
 
     def train(self, features, labels):
         return self.model.train(features, labels)

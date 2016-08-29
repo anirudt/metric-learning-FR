@@ -5,11 +5,12 @@ Read the newest version of the Face Recognition paper for better clarity. One po
 Use a single image for each individual, and try to modify it for simulating several scenarios and try to interpret the relative recognition accuracies amongst them.
 
 # Immediate Next Day TODOs:
+- Add integration testing methodologies.
 - Testing of PCA, LDA system separately using nearest neighbour methods.
 - Get preprocessing work using SIFT.
 - Integration Testing scripts.
 - Implementations of SVM, kNN.
-- Implementation of LMNN for a first hand impression of how good this distance metric learning method is. Also, *consolidate all evidence* to prove that these methods are different from inherent similar techniques like the LDA or SVM.
+- and LBP. Implementation of LMNN for a first hand impression of how good this distance metric learning method is. Also, *consolidate all evidence* to prove that these methods are different from inherent similar techniques like the LDA or SVM.
 
 # Things Done:
 - PCA, LDA classful implementation.

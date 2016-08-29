@@ -122,5 +122,5 @@ class LBP:
     def save(self, filename):
         return self.model.save(filename)
 
-    def load(self.filename):
+    def load(self, filename):
         return self.model.load(filename)

@@ -112,8 +112,8 @@ class LBP:
     def __init__(self):
         self.radius = 1
         self.n_points = 8*1
-        #self.model = cv2.createLBPHFaceRecognizer(self.radius,
-                #self.n_points)
+        self.model = cv2.createLBPHFaceRecognizer(self.radius,
+                self.n_points)
         self.model = None
 
     def train(self, features, labels):

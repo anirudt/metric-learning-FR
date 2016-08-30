@@ -6,6 +6,7 @@ import cv2
 import pdb
 import csv
 import classifier
+import dataPorter
 
 """ Script for EigenFace Method of Face Recognition """
 
@@ -68,26 +69,9 @@ def nearest_neighbour(projs, test_proj):
     print "Closest neighbour is {0}".format(distances)
     return np.argmin(distances)
 
-def import_training_set():
-    """ Get the face matrix here. """
-    face_matrix = np.array([ np.resize(np.array(cv2.imread("data/ROLL ("+str(num)+")/Regular/W ("+str(tilt_idx)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel() for num in range(1, NUM_PEOPLE+1) for tilt_idx in range(2,4)], dtype='float64')
-    labels = [num for num in range(1, NUM_PEOPLE+1) for i in range(IMGS_PER_PERSON)]
-    print "labels = ", labels
-    face_matrix = face_matrix.T
-    print "The dimensions of the face matrix are: {0}".format(face_matrix.shape)
-
-    mean = np.mean(face_matrix, axis=1)
-    print "The dimensions of the mean face are: {0}".format(mean.shape)
-
-    # TODO: Make a way to print / imwrite this average image
-    for col in range(face_matrix.shape[1]):
-        face_matrix[:, col] = face_matrix[:, col] - mean
-
-    return face_matrix, mean, labels
-
 def train(classifier):
     """ Get data, train, get the Eigenvalues and store them."""
-    face_matrix, mean_face, labels = import_training_set()
+    face_matrix, mean_face, labels = dataPorter.import_custom_training_set(NUM_PEOPLE, IMGS_PER_PERSON)
 
     print face_matrix.shape
 
@@ -116,7 +100,7 @@ def train(classifier):
 
 def test(tilt_idx, trained_bundle): #lda, lda_projection, mean_face, pca, selected_eigen_vecs_pca, selected_eigen_vecs_lda):
     """ Acquire a new image and get the data. """
-    test_image = np.resize(np.matrix(cv2.imread("data/ROLL (8)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), dims).ravel()
+    test_image = dataPorter.import_custom_testing_set(tilt_idx)
     test_image = test_image.T
     mean_face = trained_bundle[-1]
     test_image -= mean_face

@@ -6,6 +6,16 @@ from skimage.feature import local_binary_pattern
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
+# Helper Functions
+def nearest_neighbour(projs, test_proj):
+    distances = np.zeros((projs.shape[1], 1))
+    # Alternatively, you could also try the following line.
+    # distances = np.linalg.norm(projs - test_proj, axis=1)
+    for col in range(projs.shape[1]):
+        distances[col] = np.linalg.norm((projs[:, col] - test_proj))
+    print "Closest neighbour is {0}".format(distances)
+    return np.argmin(distances)
+
 class PCA:
     """ Class to abstract implementations of PCA. """
     def __init__(self):
@@ -59,7 +69,7 @@ class PCA:
         y = y.T
         self.y = self.y - self.mean
         self.test_projection = np.matrix(self.selected_eigen_vecs.T) * np.matrix(y).T
-        return self.test_projection
+        return nearest_neighbour(self.A_space, self.test_projection)
         
 class LDA:
     """ Class to abstract implementation of LDA"""
@@ -122,7 +132,7 @@ class LDA:
     def transform(self, y):
         """ Function to apply given test data on the created LDA model """
         self.test_proj = np.matrix(self.eigen_vecs.T) * np.matrix(y)
-        return self.test_proj
+        return nearest_neighbour(self.lda_projection, self.test_proj)
 
 class LBP:
     """Class to abstract implementation of LBP"""

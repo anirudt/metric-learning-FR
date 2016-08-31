@@ -60,15 +60,6 @@ def pca_lda(face_matrix, pca, lda):
 
     return [2, pca, lda, selected_eigen_vecs_pca, selected_eigen_vecs_lda, lda_projection]
 
-def nearest_neighbour(projs, test_proj):
-    distances = np.zeros((projs.shape[1], 1))
-    # Alternatively, you could also try the following line.
-    # distances = np.linalg.norm(projs - test_proj, axis=1)
-    for col in range(projs.shape[1]):
-        distances[col] = np.linalg.norm((projs[:, col] - test_proj))
-    print "Closest neighbour is {0}".format(distances)
-    return np.argmin(distances)
-
 def train(classifier):
     """ Get data, train, get the Eigenvalues and store them."""
     face_matrix, labels = dataPorter.import_custom_training_set(NUM_PEOPLE, IMGS_PER_PERSON, 'unravel')
@@ -77,7 +68,6 @@ def train(classifier):
 
     if classifier in str2classifier:
         model = str2classifier[classifier]
-        pdb.set_trace()
         trained_bundle = model.fit(face_matrix, labels)
         return [1, model, trained_bundle]
         # TODO: Handle this trained_bundle in a standard way
@@ -107,8 +97,9 @@ def test(tilt_idx, trained_bundle): #lda, lda_projection, mean_face, pca, select
     c = 0
     if trained_bundle[0] == 1:
         model = trained_bundle[1]
-        test_proj = model.transform(test_image)
-        detected_idx = nearest_neighbour(trained_bundle[-2], test_proj)
+        detected_idx = model.transform(test_image)
+        print detected_idx
+        #pdb.set_trace()
 
     elif trained_bundle[0] == 2:
         model1 = trained_bundle[1]
@@ -130,7 +121,7 @@ def test(tilt_idx, trained_bundle): #lda, lda_projection, mean_face, pca, select
     # Trying out the nearest neighbour for classification
     #detected_idx = nearest_neighbour(lda_projection, lda_test_proj)
 
-    print "Detected face is of serial no. {0}".format((detected_idx+2)/IMGS_PER_PERSON)
+    #print "Detected face is of serial no. {0}".format((detected_idx+2)/IMGS_PER_PERSON)
 
 def multi_runner():
     """

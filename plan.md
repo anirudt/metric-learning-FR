@@ -29,6 +29,7 @@ Use a single image for each individual, and try to modify it for simulating seve
   - Face Detector System
   - Place eyes at the same level, etc
   - Pose Estimation definitely needs to be done, and binning a test image. Refer the pose.pdf for this.
+- Shift print_eig() to the classifier.py implementation if required in the future.
 
 # Papers:
 - All @ papers/

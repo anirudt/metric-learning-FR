@@ -71,21 +71,22 @@ def nearest_neighbour(projs, test_proj):
 
 def train(classifier):
     """ Get data, train, get the Eigenvalues and store them."""
-    face_matrix, mean_face, labels = dataPorter.import_custom_training_set(NUM_PEOPLE, IMGS_PER_PERSON)
+    face_matrix, labels = dataPorter.import_custom_training_set(NUM_PEOPLE, IMGS_PER_PERSON, 'unravel')
 
     print face_matrix.shape
 
     if classifier in str2classifier:
         model = str2classifier[classifier]
-        trained_bundle = model.fit(face_matrix, NUM_PEOPLE)
-        return [1, model, trained_bundle, mean_face]
+        pdb.set_trace()
+        trained_bundle = model.fit(face_matrix, labels)
+        return [1, model, trained_bundle]
         # TODO: Handle this trained_bundle in a standard way
     else:
         if classifier == "pcalda":
             pca = str2classifier[classifier[0:3]]
             lda = str2classifier[classifier[3:]]
             trained_bundle = pca_lda(face_matrix, pca, lda)
-            return trained_bundle + [mean_face]
+            return trained_bundle
         # Add more hybrid varieties here. If they are standalone 
         # classifiers, make a class out of it.
 
@@ -100,10 +101,7 @@ def train(classifier):
 
 def test(tilt_idx, trained_bundle): #lda, lda_projection, mean_face, pca, selected_eigen_vecs_pca, selected_eigen_vecs_lda):
     """ Acquire a new image and get the data. """
-    test_image = dataPorter.import_custom_testing_set(tilt_idx)
-    test_image = test_image.T
-    mean_face = trained_bundle[-1]
-    test_image -= mean_face
+    test_image = dataPorter.import_custom_testing_set(tilt_idx, 'unravel')
 
     
     c = 0
@@ -140,18 +138,8 @@ def multi_runner():
     """
     eigenvals, eigenvecs = [], []
     for tilt_idx in range(2, 8):
-        trained_bundle = train("pcalda")
+        trained_bundle = train("lbp")
         test(tilt_idx, trained_bundle)
-        #pca, lda, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda = train()
-        #test(tilt_idx, lda, lda_projection, mean_face, pca, selected_eigen_vecs_pca, selected_eigen_vecs_lda)
-    """
-    eigenvals.append(tmp_eigen_vals)
-    eigenvecs.append(tmp_eigen_vecs)
-    eigenvecs = np.array(eigenvecs)
-    eigenvals = np.array(eigenvals)
-    print eigenvals, eigenvecs
-    return eigenvals, eigenvecs
-    """
     return 0
 
 

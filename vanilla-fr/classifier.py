@@ -16,9 +16,20 @@ class PCA:
         self.A_space = None
         self.selected_eigen_vecs = None
         self.test_projection = None
+        self.mean = []
 
-    def fit(self, A, n_components):
+    def fit(self, A, labels):
         """ Fits the PCA with the given feature vector and the number of components """
+        A = A.T
+
+        self.mean = np.mean(A, axis=1)
+        print "The dimensions of the mean face are: {0}".format(mean.shape)
+
+        # TODO: Make a way to print / imwrite this average image
+        for col in range(A.shape[1]):
+            A[:, col] = A[:, col] - self.mean
+
+        n_components = A.shape[1]
         # Compute the inner feature covariance for simplifying computation
         self.cov = np.matrix(A.T) * np.matrix(A)
         self.cov /= self.cov.shape[0]
@@ -45,6 +56,8 @@ class PCA:
 
     def transform(self, y):
         """ Transforms the given test data with the developed model"""
+        y = y.T
+        self.y = self.y - self.mean
         self.test_projection = np.matrix(self.selected_eigen_vecs.T) * np.matrix(y).T
         return self.test_projection
         
@@ -57,8 +70,10 @@ class LDA:
         self.lda_projection = None
         self.test_proj = None
     
-    def fit(self, A, n_classes, n_components):
+    def fit(self, A, labels):
         """ Check if you really need to specify the n_classes as another argument"""
+        n_classes = np.max(labels)
+        n_components = labels.shape[0]
         num_imgs = A.shape[1]
         imgs_per_person = num_imgs / n_classes
         class_means = np.zeros((A.shape[0], n_classes))
@@ -90,8 +105,10 @@ class LDA:
         sort_indices = np.abs(self.eigen_vals).argsort()[::-1]
         self.eigen_vecs = self.eigen_vecs.T
         #pdb.set_trace()
-        self.eigen_vals = self.eigen_vals[sort_indices[0:n_components]]
-        self.eigen_vecs = self.eigen_vecs[sort_indices[0:n_components]]
+
+        # TODO: In case you wish to remove certain LDA components, do them here.
+        self.eigen_vals = self.eigen_vals[sort_indices]
+        self.eigen_vecs = self.eigen_vecs[sort_indices]
         self.eigen_vecs = self.eigen_vecs.T
         print self.eigen_vecs.T.shape, A.shape
 
@@ -110,18 +127,17 @@ class LDA:
 class LBP:
     """Class to abstract implementation of LBP"""
     def __init__(self):
-        self.radius = 1
-        self.n_points = 8*1
+        self.radius = 2
+        self.n_points = 16
         self.model = cv2.createLBPHFaceRecognizer(self.radius,
                 self.n_points)
-        self.model = None
 
-    def train(self, features, labels):
+    def fit(self, features, labels):
         return self.model.train(features, labels)
 
-    def predict(self, y_test):
+    def transform(self, y_test):
         """ Uses a nearest neighbour to find the class label """
-        return self.model.predict(test)
+        return self.model.predict(y_test)
 
     def save(self, filename):
         return self.model.save(filename)

@@ -18,10 +18,17 @@ Some helper functions need to be written for better analysis.
 """
 
 
-NUM_IMGS         = 20
-IMGS_PER_PERSON  = 2
+NUM_IMGS         = 40
+IMGS_PER_PERSON  = 4
 NUM_PEOPLE       = NUM_IMGS / IMGS_PER_PERSON
-dims             = (100, 100)
+dims             = (92, 112)
+
+"""
+Acceptable tuples include:
+KGP_DB = (20, 2, (100, 100))
+ATT_DB = (40, 4, (92, 112))
+"""
+
 
 str2classifier = {"pca": classifier.PCA(),
                   "lda": classifier.LDA(),
@@ -62,7 +69,7 @@ def pca_lda(face_matrix, pca, lda):
 
 def train(classifier):
     """ Get data, train, get the Eigenvalues and store them."""
-    face_matrix, labels = dataPorter.import_custom_training_set(NUM_PEOPLE, IMGS_PER_PERSON, 'unravel')
+    face_matrix, labels = dataPorter.import_att_training_set(NUM_PEOPLE, IMGS_PER_PERSON, 'unravel')
 
     print face_matrix.shape
 
@@ -80,18 +87,9 @@ def train(classifier):
         # Add more hybrid varieties here. If they are standalone 
         # classifiers, make a class out of it.
 
-    #pca = PCA()
-    #selected_eigen_vecs_pca, eigen_face_space = pca.fit(face_matrix, NUM_PEOPLE)
-
-    # TODO: Return something
-    #lda = LDA()
-    #lda_projection, selected_eigen_vecs_lda = lda.fit(eigen_face_space, NUM_PEOPLE, NUM_PEOPLE)
-
-    #return pca, lda, lda_projection, mean_face, selected_eigen_vecs_pca, selected_eigen_vecs_lda
-
 def test(tilt_idx, trained_bundle): #lda, lda_projection, mean_face, pca, selected_eigen_vecs_pca, selected_eigen_vecs_lda):
     """ Acquire a new image and get the data. """
-    test_image = dataPorter.import_custom_testing_set(tilt_idx, 'unravel')
+    test_image = dataPorter.import_att_testing_set(tilt_idx, 'unravel')
 
     
     c = 0
@@ -110,31 +108,20 @@ def test(tilt_idx, trained_bundle): #lda, lda_projection, mean_face, pca, select
 
         detected_idx = nearest_neighbour(trained_bundle[-2], test_proj2)
 
-    # PCA-Transform the image
-    #pdb.set_trace()
-    #print selected_eigen_vecs_pca.T.shape, test_image.shape
-    #pca_test_proj = pca.transform(test_image)
-
-    # LDA-Transform the PCA subspace
-    #lda_test_proj = lda.transform(pca_test_proj)
-
-    # Trying out the nearest neighbour for classification
-    #detected_idx = nearest_neighbour(lda_projection, lda_test_proj)
-
     #print "Detected face is of serial no. {0}".format((detected_idx+2)/IMGS_PER_PERSON)
 
-def multi_runner():
+def multi_runner(classifier):
     """
     Runs the training and test for all the different tilted faces. Returns a list of lists of eigenvalues and eigenvectors.
     """
     eigenvals, eigenvecs = [], []
     for tilt_idx in range(2, 8):
-        trained_bundle = train("lbp")
+        trained_bundle = train(classifier)
         test(tilt_idx, trained_bundle)
     return 0
 
 
 if __name__ == "__main__":
-    multi_runner()
+    multi_runner("lbp")
     #eigen_logger(eigen_vals, eigen_vecs)
     print "We are done."

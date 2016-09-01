@@ -143,6 +143,7 @@ class LBP:
                 self.n_points)
 
     def fit(self, features, labels):
+        pdb.set_trace()
         return self.model.train(features, labels)
 
     def transform(self, y_test):

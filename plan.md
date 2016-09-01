@@ -5,8 +5,8 @@ Read the newest version of the Face Recognition paper for better clarity. One po
 Use a single image for each individual, and try to modify it for simulating several scenarios and try to interpret the relative recognition accuracies amongst them.
 
 # Immediate Next Day TODOs:
+- Test the input of the AY&T dataset.
 - Try out LMNN from the linked repository.
-- Testing LBP
 - Add integration testing methodologies.
 - Get preprocessing work using SIFT.
 - Integration Testing scripts.
@@ -17,6 +17,8 @@ Use a single image for each individual, and try to modify it for simulating seve
 - PCA, LDA classful implementation.
 - LBP Classful implementation.
 - Testing of PCA, LDA system separately using nearest neighbour methods.
+- Testing LBP
+- Read through the implementation of LMNN, optimizations possible, can include more from other optimization techniques into the gradient equations.
 
 # TODO:
 - Prior Art establishment in the areas of *Face Recognition*, *Matrix Perturbation*, *Facial Deformation* and *Random Matrix Theory*.

@@ -132,6 +132,7 @@ def multi_runner(classifier, database):
 
 def main(classifier, database):
     multi_runner(classifier, database)
+    return 1
 
 if __name__ == '__main__':
     multi_runner("lbp", "ATT")

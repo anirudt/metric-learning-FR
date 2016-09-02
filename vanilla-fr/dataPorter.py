@@ -28,9 +28,9 @@ def import_att_training_set(NUM_PEOPLE_ATT, IMGS_PER_PERSON_ATT, opt):
     Credits: AT&T Laboratories Cambridge."""
 
     if opt == 'ravel':
-        face_matrix = np.array([ np.array(cv2.imread("~/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel() for num in range(1, NUM_PEOPLE_ATT+1) for idx in range(1, IMGS_PER_PERSON_ATT+1) ], dtype=np.float64)
+        face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel() for num in range(1, NUM_PEOPLE_ATT+1) for idx in range(1, IMGS_PER_PERSON_ATT+1) ], dtype=np.float64)
     else:
-        face_matrix = np.array([ np.array(cv2.imread("~/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64) for num in range(1, NUM_PEOPLE_ATT+1) for idx in range(1, IMGS_PER_PERSON_ATT+1) ], dtype=np.float64)
+        face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64) for num in range(1, NUM_PEOPLE_ATT+1) for idx in range(1, IMGS_PER_PERSON_ATT+1) ], dtype=np.float64)
     labels = np.array([num for num in range(1, NUM_PEOPLE_ATT+1) for _ in range(IMGS_PER_PERSON_ATT)])
 
     print "ATT feature set ", face_matrix.shape
@@ -38,7 +38,7 @@ def import_att_training_set(NUM_PEOPLE_ATT, IMGS_PER_PERSON_ATT, opt):
 
 def import_att_testing_set(test_num, opt):
     if opt == 'ravel':
-        return np.array(cv2.imread("~/Datasets/orl_faces/s1/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel()
+        return np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s1/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel()
     else:
-        return np.array(cv2.imread("~/Datasets/orl_faces/s1/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64)
+        return np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s1/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64)
 

@@ -34,6 +34,16 @@ str2classifier = {"pca": classifier.PCA(),
                   "lda": classifier.LDA(),
                   "lbp": classifier.LBP()}
 
+str2traindatabase = { "KGP": dataPorter.import_custom_training_set,
+                      "ATT": dataPorter.import_att_training_set}
+
+str2testdatabase = { "KGP": dataPorter.import_custom_testing_set,
+                     "ATT": dataPorter.import_att_testing_set}
+
+str2ravelling = {"pca": 'ravel',
+                 "pcalda": 'ravel',
+                 "lbp": 'unravel'}
+
 """
 Some helper functions.
 """
@@ -67,9 +77,9 @@ def pca_lda(face_matrix, pca, lda):
 
     return [2, pca, lda, selected_eigen_vecs_pca, selected_eigen_vecs_lda, lda_projection]
 
-def train(classifier):
+def train(classifier, database):
     """ Get data, train, get the Eigenvalues and store them."""
-    face_matrix, labels = dataPorter.import_att_training_set(NUM_PEOPLE, IMGS_PER_PERSON, 'unravel')
+    face_matrix, labels = str2traindatabase[database](NUM_PEOPLE, IMGS_PER_PERSON, str2ravelling[classifier])
 
     print face_matrix.shape
 
@@ -87,10 +97,9 @@ def train(classifier):
         # Add more hybrid varieties here. If they are standalone 
         # classifiers, make a class out of it.
 
-def test(tilt_idx, trained_bundle): #lda, lda_projection, mean_face, pca, selected_eigen_vecs_pca, selected_eigen_vecs_lda):
+def test(tilt_idx, trained_bundle, classifier, database):
     """ Acquire a new image and get the data. """
-    test_image = dataPorter.import_att_testing_set(tilt_idx, 'unravel')
-
+    test_image = str2testdatabase[database](tilt_idx, str2ravelling[classifier])
     
     c = 0
     if trained_bundle[0] == 1:
@@ -110,18 +119,19 @@ def test(tilt_idx, trained_bundle): #lda, lda_projection, mean_face, pca, select
 
     #print "Detected face is of serial no. {0}".format((detected_idx+2)/IMGS_PER_PERSON)
 
-def multi_runner(classifier):
+def multi_runner(classifier, database):
     """
     Runs the training and test for all the different tilted faces. Returns a list of lists of eigenvalues and eigenvectors.
     """
     eigenvals, eigenvecs = [], []
     for tilt_idx in range(2, 8):
-        trained_bundle = train(classifier)
-        test(tilt_idx, trained_bundle)
+        trained_bundle = train(classifier, database)
+        test(tilt_idx, trained_bundle, classifier, database)
     return 0
 
 
-if __name__ == "__main__":
-    multi_runner("lbp")
-    #eigen_logger(eigen_vals, eigen_vecs)
-    print "We are done."
+def main(classifier, database):
+    multi_runner(classifier, database)
+
+if __name__ == '__main__':
+    multi_runner("lbp", "ATT")

@@ -1,8 +1,8 @@
 default:
-	python eigenfaces.py
+	python test_classifiers.py
 
 clean:
 	rm *.swp *.pyc
 
 install:
-	python eigenfaces.py
+	python test_classifiers.py

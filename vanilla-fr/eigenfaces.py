@@ -21,7 +21,6 @@ Some helper functions need to be written for better analysis.
 NUM_IMGS         = 40
 IMGS_PER_PERSON  = 4
 NUM_PEOPLE       = NUM_IMGS / IMGS_PER_PERSON
-dims             = (92, 112)
 
 """
 Acceptable tuples include:
@@ -68,71 +67,85 @@ def eigen_logger(eigen_vals, eigen_vecs):
         writer.writerows(eigen_vecs.tolist())
 
 """ Hybrid Classifiers Definition """
-def pca_lda(face_matrix, pca, lda):
+def pca_lda(face_matrix, pca, lda, labels):
     print "shape ", face_matrix.shape
     selected_eigen_vecs_pca, eigen_face_space = pca.fit(face_matrix, NUM_IMGS)
 
     # TODO: Return something
-    selected_eigen_vecs_lda, lda_projection = lda.fit(eigen_face_space, NUM_PEOPLE, NUM_IMGS)
+    selected_eigen_vecs_lda, lda_projection = lda.fit(eigen_face_space, labels)
 
     return [2, pca, lda, selected_eigen_vecs_pca, selected_eigen_vecs_lda, lda_projection]
 
-def train(classifier, database):
+def train(classifier_str, database):
     """ Get data, train, get the Eigenvalues and store them."""
-    face_matrix, labels = str2traindatabase[database](NUM_PEOPLE, IMGS_PER_PERSON, str2ravelling[classifier])
+    face_matrix, labels = str2traindatabase[database](NUM_PEOPLE, IMGS_PER_PERSON, str2ravelling[classifier_str])
 
     print face_matrix.shape
 
-    if classifier in str2classifier:
-        model = str2classifier[classifier]
+    if classifier_str in str2classifier:
+        model = str2classifier[classifier_str]
         trained_bundle = model.fit(face_matrix, labels)
         return [1, model, trained_bundle]
         # TODO: Handle this trained_bundle in a standard way
     else:
-        if classifier == "pcalda":
-            pca = str2classifier[classifier[0:3]]
-            lda = str2classifier[classifier[3:]]
-            trained_bundle = pca_lda(face_matrix, pca, lda)
+        if classifier_str == "pcalda":
+            pca = str2classifier[classifier_str[0:3]]
+            lda = str2classifier[classifier_str[3:]]
+            trained_bundle = pca_lda(face_matrix, pca, lda, labels)
             return trained_bundle
         # Add more hybrid varieties here. If they are standalone 
-        # classifiers, make a class out of it.
+        # classifier_strs, make a class out of it.
 
-def test(tilt_idx, trained_bundle, classifier, database):
+def test(tilt_idx, trained_bundle, classifier_str, database):
     """ Acquire a new image and get the data. """
-    test_image = str2testdatabase[database](tilt_idx, str2ravelling[classifier])
+    test_image = str2testdatabase[database](tilt_idx, str2ravelling[classifier_str])
     
     c = 0
     if trained_bundle[0] == 1:
         model = trained_bundle[1]
-        detected_idx = model.transform(test_image)
+        test_proj, space = model.transform(test_image)
+
+        # FIXME: Remove this once the LBP has an option to give its space key
+        if hasattr(space, 'shape'):
+            detected_idx = classifier.nearest_neighbour(test_proj, space)
+        else:
+            detected_idx = test_proj
+            print space
         print detected_idx
         #pdb.set_trace()
 
     elif trained_bundle[0] == 2:
         model1 = trained_bundle[1]
-        test_proj1 = model1.transform(test_image)
+        test_proj1, _ = model1.transform(test_image)
 
         model2 = trained_bundle[2]
-        test_proj2 = model2.transform(test_proj1)
+        test_proj2, space = model2.transform(test_proj1)
 
-        detected_idx = nearest_neighbour(trained_bundle[-2], test_proj2)
+        detected_idx = classifier.nearest_neighbour(test_proj2, space)
 
     #print "Detected face is of serial no. {0}".format((detected_idx+2)/IMGS_PER_PERSON)
 
-def multi_runner(classifier, database):
+def multi_runner(classifier_str, database):
     """
     Runs the training and test for all the different tilted faces. Returns a list of lists of eigenvalues and eigenvectors.
     """
     eigenvals, eigenvecs = [], []
     for tilt_idx in range(2, 8):
-        trained_bundle = train(classifier, database)
-        test(tilt_idx, trained_bundle, classifier, database)
+        trained_bundle = train(classifier_str, database)
+        test(tilt_idx, trained_bundle, classifier_str, database)
     return 0
 
 
-def main(classifier, database):
-    multi_runner(classifier, database)
+def main(classifier_str, database):
+    global NUM_IMGS, IMGS_PER_PERSON, dims
+    if database == "KGP":
+        (NUM_IMGS, IMGS_PER_PERSON, dims) = (20, 2, (100, 100))
+    elif database == "ATT":
+        (NUM_IMGS, IMGS_PER_PERSON, dims) = (40, 4, (92, 112))
+    print "sizes are ",(NUM_IMGS, IMGS_PER_PERSON, dims) 
+
+    multi_runner(classifier_str, database)
     return 1
 
 if __name__ == '__main__':
-    multi_runner("lbp", "ATT")
+    main("lbp", "KGP")

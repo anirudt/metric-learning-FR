@@ -33,7 +33,7 @@ class PCA:
         A = A.T
 
         self.mean = np.mean(A, axis=1)
-        print "The dimensions of the mean face are: {0}".format(mean.shape)
+        print "The dimensions of the mean face are: {0}".format(self.mean.shape)
 
         # TODO: Make a way to print / imwrite this average image
         for col in range(A.shape[1]):
@@ -67,9 +67,9 @@ class PCA:
     def transform(self, y):
         """ Transforms the given test data with the developed model"""
         y = y.T
-        self.y = self.y - self.mean
+        y = y - self.mean
         self.test_projection = np.matrix(self.selected_eigen_vecs.T) * np.matrix(y).T
-        return nearest_neighbour(self.A_space, self.test_projection)
+        return self.test_projection, self.A_space
         
 class LDA:
     """ Class to abstract implementation of LDA"""
@@ -131,8 +131,9 @@ class LDA:
 
     def transform(self, y):
         """ Function to apply given test data on the created LDA model """
+        print "Sizes are ", self.eigen_vecs.T.shape, y.shape
         self.test_proj = np.matrix(self.eigen_vecs.T) * np.matrix(y)
-        return nearest_neighbour(self.lda_projection, self.test_proj)
+        return self.test_proj, self.lda_projection
 
 class LBP:
     """Class to abstract implementation of LBP"""
@@ -143,7 +144,6 @@ class LBP:
                 self.n_points)
 
     def fit(self, features, labels):
-        #pdb.set_trace()
         return self.model.train(features, labels)
 
     def transform(self, y_test):

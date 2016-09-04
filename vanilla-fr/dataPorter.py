@@ -1,6 +1,16 @@
 import cv2
 import numpy as np
 
+TEST_IMG_ATT = 1
+TEST_IMG_KGP = 8
+
+# Getter function
+def getTrueTestVal(database):
+    if database == "KGP":
+        return TEST_IMG_KGP
+    else:
+        return TEST_IMG_ATT
+
 def import_custom_training_set(NUM_PEOPLE, IMGS_PER_PERSON, opt):
     """ This function provides mean corrected images from the custom IIT KGP dataset
         and provides labels. """

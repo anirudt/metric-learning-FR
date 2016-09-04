@@ -107,7 +107,10 @@ def test(tilt_idx, trained_bundle, classifier_str, database):
 
         # FIXME: Remove this once the LBP has an option to give its space key
         if hasattr(space, 'shape'):
-            detected_idx = classifier.nearest_neighbour(test_proj, space)
+            detected_idx = classifier.nearest_neighbour(space, test_proj)
+            print detected_idx
+            detected_idx = int((detected_idx/IMGS_PER_PERSON)+1)
+            print "Detected argmin: ", detected_idx
         else:
             detected_idx = test_proj
             print space
@@ -121,18 +124,27 @@ def test(tilt_idx, trained_bundle, classifier_str, database):
         model2 = trained_bundle[2]
         test_proj2, space = model2.transform(test_proj1)
 
-        detected_idx = classifier.nearest_neighbour(test_proj2, space)
+        detected_idx = classifier.nearest_neighbour(space, test_proj2)
+        detected_idx = int((detected_idx-1)/IMGS_PER_PERSON)+1
+        print detected_idx
 
+    # Log the accuracy metrics.
+    trueVal = dataPorter.getTrueTestVal(database)
+    return [classifier_str, trueVal, detected_idx]
+    
     #print "Detected face is of serial no. {0}".format((detected_idx+2)/IMGS_PER_PERSON)
 
 def multi_runner(classifier_str, database):
     """
     Runs the training and test for all the different tilted faces. Returns a list of lists of eigenvalues and eigenvectors.
     """
+    g = open("results.csv", 'ab')
+    wr = csv.writer(g)
     eigenvals, eigenvecs = [], []
     for tilt_idx in range(2, 8):
         trained_bundle = train(classifier_str, database)
-        test(tilt_idx, trained_bundle, classifier_str, database)
+        val = test(tilt_idx, trained_bundle, classifier_str, database)
+        wr.writerow(val)
     return 0
 
 
@@ -148,4 +160,4 @@ def main(classifier_str, database):
     return 1
 
 if __name__ == '__main__':
-    main("lbp", "KGP")
+    main("pca", "ATT")

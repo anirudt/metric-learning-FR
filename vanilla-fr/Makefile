@@ -3,7 +3,7 @@ default:
 
 clean:
 	rm -rf *.swp *.pyc
-	rm results.csv
+	rm -rf results.csv accuracy.csv
 
 install:
 	python test_classifiers.py

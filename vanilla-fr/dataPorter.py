@@ -1,16 +1,6 @@
 import cv2
 import numpy as np
 
-TEST_IMG_ATT = 1
-TEST_IMG_KGP = 8
-
-# Getter function
-def getTrueTestVal(database):
-    if database == "KGP":
-        return TEST_IMG_KGP
-    else:
-        return TEST_IMG_ATT
-
 def import_custom_training_set(NUM_PEOPLE, IMGS_PER_PERSON, opt):
     """ This function provides mean corrected images from the custom IIT KGP dataset
         and provides labels. """
@@ -26,11 +16,11 @@ def import_custom_training_set(NUM_PEOPLE, IMGS_PER_PERSON, opt):
 
     return face_matrix, labels
 
-def import_custom_testing_set(tilt_idx, opt):
+def import_custom_testing_set(person, tilt_idx, opt):
     if opt == "ravel":
-        return np.resize(np.matrix(cv2.imread("data/ROLL (8)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), (100, 100)).ravel()
+        return np.resize(np.matrix(cv2.imread("data/ROLL ("+str(person)+")/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), (100, 100)).ravel()
     else:
-        return np.resize(np.matrix(cv2.imread("data/ROLL (8)/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), (100, 100))
+        return np.resize(np.matrix(cv2.imread("data/ROLL ("+str(person)+")/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), (100, 100))
 
 
 def import_att_training_set(NUM_PEOPLE_ATT, IMGS_PER_PERSON_ATT, opt):
@@ -46,9 +36,9 @@ def import_att_training_set(NUM_PEOPLE_ATT, IMGS_PER_PERSON_ATT, opt):
     print "ATT feature set ", face_matrix.shape
     return face_matrix, labels 
 
-def import_att_testing_set(test_num, opt):
+def import_att_testing_set(person, test_num, opt):
     if opt == 'ravel':
-        return np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s1/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel()
+        return np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(person)+"/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel()
     else:
-        return np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s1/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64)
+        return np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(person)+"/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64)
 

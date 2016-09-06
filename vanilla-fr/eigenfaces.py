@@ -96,9 +96,9 @@ def train(classifier_str, database):
         # Add more hybrid varieties here. If they are standalone 
         # classifier_strs, make a class out of it.
 
-def test(tilt_idx, trained_bundle, classifier_str, database):
+def test(person, tilt_idx, trained_bundle, classifier_str, database):
     """ Acquire a new image and get the data. """
-    test_image = str2testdatabase[database](tilt_idx, str2ravelling[classifier_str])
+    test_image = str2testdatabase[database](person, tilt_idx, str2ravelling[classifier_str])
     
     c = 0
     if trained_bundle[0] == 1:
@@ -129,8 +129,7 @@ def test(tilt_idx, trained_bundle, classifier_str, database):
         print detected_idx
 
     # Log the accuracy metrics.
-    trueVal = dataPorter.getTrueTestVal(database)
-    return [classifier_str, trueVal, detected_idx]
+    return [person, classifier_str, detected_idx]
     
     #print "Detected face is of serial no. {0}".format((detected_idx+2)/IMGS_PER_PERSON)
 
@@ -139,21 +138,34 @@ def multi_runner(classifier_str, database):
     Runs the training and test for all the different tilted faces. Returns a list of lists of eigenvalues and eigenvectors.
     """
     g = open("results.csv", 'ab')
+    a = open("accuracy.csv", "wb")
     wr = csv.writer(g)
+    acc = csv.writer(a)
     eigenvals, eigenvecs = [], []
-    for tilt_idx in range(2, 8):
-        trained_bundle = train(classifier_str, database)
-        val = test(tilt_idx, trained_bundle, classifier_str, database)
-        wr.writerow(val)
+    start, end = 9, 11
+    trained_bundle = train(classifier_str, database)
+    for person in range(1,NUM_PEOPLE+1):
+        c = 0
+        for tilt_idx in range(start, end):
+            val = test(person, tilt_idx, trained_bundle, classifier_str, database)
+            print person
+            wr.writerow(val)
+            if val[2] == val[0]:
+                c+=1
+        accuracy = c*100.0/(end-start)
+        tmp = [classifier_str, database, person, accuracy]
+        acc.writerow(tmp)
+
+
     return 0
 
 
 def main(classifier_str, database):
-    global NUM_IMGS, IMGS_PER_PERSON, dims
+    global NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, dims
     if database == "KGP":
-        (NUM_IMGS, IMGS_PER_PERSON, dims) = (20, 2, (100, 100))
+        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, dims) = (10, 20, 2, (100, 100))
     elif database == "ATT":
-        (NUM_IMGS, IMGS_PER_PERSON, dims) = (40, 4, (92, 112))
+        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, dims) = (10, 80, 8, (92, 112))
     print "sizes are ",(NUM_IMGS, IMGS_PER_PERSON, dims) 
 
     multi_runner(classifier_str, database)

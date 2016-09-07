@@ -21,6 +21,7 @@ Some helper functions need to be written for better analysis.
 NUM_IMGS         = 40
 IMGS_PER_PERSON  = 4
 NUM_PEOPLE       = NUM_IMGS / IMGS_PER_PERSON
+TOT_IMGS_PP = 10
 
 """
 Acceptable tuples include:
@@ -76,9 +77,9 @@ def pca_lda(face_matrix, pca, lda, labels):
 
     return [2, pca, lda, selected_eigen_vecs_pca, selected_eigen_vecs_lda, lda_projection]
 
-def train(classifier_str, database):
+def train(classifier_str, database, training_set_idx):
     """ Get data, train, get the Eigenvalues and store them."""
-    face_matrix, labels = str2traindatabase[database](NUM_PEOPLE, IMGS_PER_PERSON, str2ravelling[classifier_str])
+    face_matrix, labels = str2traindatabase[database](NUM_PEOPLE, IMGS_PER_PERSON, str2ravelling[classifier_str], training_set_idx)
 
     print face_matrix.shape
 
@@ -108,8 +109,8 @@ def test(person, tilt_idx, trained_bundle, classifier_str, database):
         # FIXME: Remove this once the LBP has an option to give its space key
         if hasattr(space, 'shape'):
             detected_idx = classifier.nearest_neighbour(space, test_proj)
-            print detected_idx
-            detected_idx = int((detected_idx/IMGS_PER_PERSON)+1)
+            #print detected_idx
+            detected_idx = int((detected_idx/IMGS_PER_PERSON))+1
             print "Detected argmin: ", detected_idx
         else:
             detected_idx = test_proj
@@ -125,7 +126,7 @@ def test(person, tilt_idx, trained_bundle, classifier_str, database):
         test_proj2, space = model2.transform(test_proj1)
 
         detected_idx = classifier.nearest_neighbour(space, test_proj2)
-        detected_idx = int((detected_idx-1)/IMGS_PER_PERSON)+1
+        detected_idx = int((detected_idx)/IMGS_PER_PERSON)+1
         print detected_idx
 
     # Log the accuracy metrics.
@@ -142,17 +143,25 @@ def multi_runner(classifier_str, database):
     wr = csv.writer(g)
     acc = csv.writer(a)
     eigenvals, eigenvecs = [], []
-    start, end = 9, 11
-    trained_bundle = train(classifier_str, database)
+    numfolds = 10
+    training_set_idx = range(1,TOT_IMGS_PP+1)
     for person in range(1,NUM_PEOPLE+1):
         c = 0
-        for tilt_idx in range(start, end):
-            val = test(person, tilt_idx, trained_bundle, classifier_str, database)
-            print person
-            wr.writerow(val)
-            if val[2] == val[0]:
-                c+=1
-        accuracy = c*100.0/(end-start)
+        for fold in range(numfolds):
+            testing_this_round = training_set_idx[fold:fold+1]
+            training_this_round = training_set_idx[:fold] + training_set_idx[fold+1:]
+            trained_bundle = train(classifier_str, database, training_this_round)
+            print testing_this_round, training_this_round
+            # TODO: Compute a cross validation score here
+            # to prevent overfitting.
+            # Source: http://stackoverflow.com/questions/16379313/how-to-use-the-a-k-fold-cross-validation-in-scikit-with-naive-bayes-classifier-a
+            for tilt_idx in testing_this_round:
+                val = test(person, tilt_idx, trained_bundle, classifier_str, database)
+                print val[2], val[0]
+                wr.writerow(val)
+                if val[2] == val[0]:
+                    c+=1
+        accuracy = c*100.0/numfolds
         tmp = [classifier_str, database, person, accuracy]
         acc.writerow(tmp)
 
@@ -163,13 +172,13 @@ def multi_runner(classifier_str, database):
 def main(classifier_str, database):
     global NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, dims
     if database == "KGP":
-        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, dims) = (10, 20, 2, (100, 100))
+        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (10, 20, 2, 10, (100, 100))
     elif database == "ATT":
-        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, dims) = (10, 80, 8, (92, 112))
+        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (10, 90, 9, 10, (92, 112))
     print "sizes are ",(NUM_IMGS, IMGS_PER_PERSON, dims) 
 
     multi_runner(classifier_str, database)
     return 1
 
 if __name__ == '__main__':
-    main("pca", "ATT")
+    main("pcalda", "ATT")

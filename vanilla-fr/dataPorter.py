@@ -23,15 +23,15 @@ def import_custom_testing_set(person, tilt_idx, opt):
         return np.resize(np.matrix(cv2.imread("data/ROLL ("+str(person)+")/Regular/W ("+str(tilt_idx-1)+").jpg", cv2.IMREAD_GRAYSCALE), dtype='float64'), (100, 100))
 
 
-def import_att_training_set(NUM_PEOPLE_ATT, IMGS_PER_PERSON_ATT, opt):
+def import_att_training_set(NUM_PEOPLE_ATT, IMGS_PER_PERSON_ATT, opt, training_set_idx):
     """ This function provides mean corrected images from the AT&T face dataset.
     Credits: AT&T Laboratories Cambridge."""
 
     if opt == 'ravel':
-        face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel() for num in range(1, NUM_PEOPLE_ATT+1) for idx in range(1, IMGS_PER_PERSON_ATT+1) ], dtype=np.float64)
+        face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel() for num in range(1, NUM_PEOPLE_ATT+1) for idx in training_set_idx ], dtype=np.float64)
     else:
-        face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64) for num in range(1, NUM_PEOPLE_ATT+1) for idx in range(1, IMGS_PER_PERSON_ATT+1) ], dtype=np.float64)
-    labels = np.array([num for num in range(1, NUM_PEOPLE_ATT+1) for _ in range(IMGS_PER_PERSON_ATT)])
+        face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64) for num in range(1, NUM_PEOPLE_ATT+1) for idx in training_set_idx ], dtype=np.float64)
+    labels = np.array([num for num in range(1, NUM_PEOPLE_ATT+1) for _ in training_set_idx])
 
     print "ATT feature set ", face_matrix.shape
     return face_matrix, labels 

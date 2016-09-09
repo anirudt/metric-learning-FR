@@ -143,8 +143,14 @@ class LBP:
         self.model = cv2.createLBPHFaceRecognizer(self.radius,
                 self.n_points)
 
-    def fit(self, features, labels):
-        return self.model.train(features, labels)
+    def fit(self, features, labels, kparts=2):
+        nsamples = features.shape[0]
+        subset_size = nsamples/kparts
+        for j in xrange(kparts):
+            if j == 0:
+              self.model.train(features[0:subset_size][:], labels[0:subset_size])
+            else:
+              self.model.update(features[j*subset_size:(j+1)*subset_size][:], labels[j*subset_size:(j+1)*subset_size])
 
     def transform(self, y_test):
         """ Uses a nearest neighbour to find the class label """
@@ -155,3 +161,6 @@ class LBP:
 
     def load(self, filename):
         return self.model.load(filename)
+
+    def update(self, features, labels):
+        return self.model.update(features, labels)

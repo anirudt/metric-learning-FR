@@ -109,7 +109,7 @@ def test(person, tilt_idx, trained_bundle, classifier_str, database):
         # FIXME: Remove this once the LBP has an option to give its space key
         if hasattr(space, 'shape'):
             detected_idx = classifier.nearest_neighbour(space, test_proj)
-            #print detected_idx
+            print detected_idx
             detected_idx = int((detected_idx/IMGS_PER_PERSON))+1
             print "Detected argmin: ", detected_idx
         else:
@@ -139,17 +139,18 @@ def multi_runner(classifier_str, database):
     Runs the training and test for all the different tilted faces. Returns a list of lists of eigenvalues and eigenvectors.
     """
     g = open("results.csv", 'ab')
-    a = open("accuracy.csv", "wb")
+    numfolds = 2
+    a = open("accuracy_"+classifier_str+"_"+str(numfolds)+".csv", "wb")
     wr = csv.writer(g)
     acc = csv.writer(a)
     eigenvals, eigenvecs = [], []
-    numfolds = 10
     training_set_idx = range(1,TOT_IMGS_PP+1)
+    num = 0
     for person in range(1,NUM_PEOPLE+1):
         c = 0
-        for fold in range(numfolds):
+        for fold in range(TOT_IMGS_PP):
             testing_this_round = training_set_idx[fold:fold+1]
-            training_this_round = training_set_idx[:fold] + training_set_idx[fold+1:]
+            training_this_round = (training_set_idx[:fold] + training_set_idx[fold+1:])[:numfolds]
             trained_bundle = train(classifier_str, database, training_this_round)
             print testing_this_round, training_this_round
             # TODO: Compute a cross validation score here
@@ -161,9 +162,12 @@ def multi_runner(classifier_str, database):
                 wr.writerow(val)
                 if val[2] == val[0]:
                     c+=1
-        accuracy = c*100.0/numfolds
+        accuracy = c*100.0/TOT_IMGS_PP
+        num += accuracy
         tmp = [classifier_str, database, person, accuracy]
         acc.writerow(tmp)
+    num /= NUM_PEOPLE
+    acc.writerow([num])
 
 
     return 0
@@ -174,11 +178,11 @@ def main(classifier_str, database):
     if database == "KGP":
         (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (10, 20, 2, 10, (100, 100))
     elif database == "ATT":
-        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (10, 90, 9, 10, (92, 112))
+        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (40, 80, 2, 10, (92, 112))
     print "sizes are ",(NUM_IMGS, IMGS_PER_PERSON, dims) 
 
     multi_runner(classifier_str, database)
     return 1
 
 if __name__ == '__main__':
-    main("pcalda", "ATT")
+    main("pca", "ATT")

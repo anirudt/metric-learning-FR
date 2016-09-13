@@ -7,6 +7,7 @@ import pdb
 import csv
 import classifier
 import dataPorter
+from metric_learn import LMNN, ITML_Supervised, LSML_Supervised, SDML_Supervised
 
 """ Script for EigenFace Method of Face Recognition """
 
@@ -29,10 +30,11 @@ KGP_DB = (20, 2, (100, 100))
 ATT_DB = (40, 4, (92, 112))
 """
 
-
+# Following are string to XXX conversion dicts.
 str2classifier = {"pca": classifier.PCA(),
                   "lda": classifier.LDA(),
-                  "lbp": classifier.LBP()}
+                  "lbp": classifier.LBP(),
+                  "lmnn": classifier.LMNN()}
 
 str2traindatabase = { "KGP": dataPorter.import_custom_training_set,
                       "ATT": dataPorter.import_att_training_set}
@@ -42,7 +44,15 @@ str2testdatabase = { "KGP": dataPorter.import_custom_testing_set,
 
 str2ravelling = {"pca": 'ravel',
                  "pcalda": 'ravel',
-                 "lbp": 'unravel'}
+                 "lbp": 'unravel',
+                 "lmnn": 'ravel'}
+
+mls = [
+        LMNN,
+        ITML_Supervised,
+        SDML_Supervised,
+        LSML_Supervised
+        ]
 
 """
 Some helper functions.
@@ -86,6 +96,8 @@ def train(classifier_str, database, training_set_idx):
     if classifier_str in str2classifier:
         model = str2classifier[classifier_str]
         trained_bundle = model.fit(face_matrix, labels)
+        #arr = LMNN(k=3)
+        #arr.fit(trained_bundle[1], labels)
         return [1, model, trained_bundle]
         # TODO: Handle this trained_bundle in a standard way
     else:
@@ -139,7 +151,7 @@ def multi_runner(classifier_str, database):
     Runs the training and test for all the different tilted faces. Returns a list of lists of eigenvalues and eigenvectors.
     """
     g = open("results.csv", 'ab')
-    numfolds = 2
+    numfolds = 4
     a = open("accuracy_"+classifier_str+"_"+str(numfolds)+".csv", "wb")
     wr = csv.writer(g)
     acc = csv.writer(a)
@@ -178,7 +190,7 @@ def main(classifier_str, database):
     if database == "KGP":
         (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (10, 20, 2, 10, (100, 100))
     elif database == "ATT":
-        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (40, 80, 2, 10, (92, 112))
+        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (20, 80, 4, 10, (92, 112))
     print "sizes are ",(NUM_IMGS, IMGS_PER_PERSON, dims) 
 
     multi_runner(classifier_str, database)

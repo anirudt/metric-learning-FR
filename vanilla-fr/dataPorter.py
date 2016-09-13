@@ -31,7 +31,7 @@ def import_att_training_set(NUM_PEOPLE_ATT, IMGS_PER_PERSON_ATT, opt, training_s
         face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel() for num in range(1, NUM_PEOPLE_ATT+1) for idx in training_set_idx ], dtype=np.float64)
     else:
         face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num)+"/"+str(idx)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64) for num in range(1, NUM_PEOPLE_ATT+1) for idx in training_set_idx ], dtype=np.float64)
-    labels = np.array([num for num in range(1, NUM_PEOPLE_ATT+1) for _ in training_set_idx])
+    labels = np.array([num for num in range(1, NUM_PEOPLE_ATT+1) for _ in training_set_idx], dtype=np.int32)
 
     print "ATT feature set ", face_matrix.shape
     return face_matrix, labels 

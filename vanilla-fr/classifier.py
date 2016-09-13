@@ -3,6 +3,7 @@ import pdb
 import cv2
 import logging
 from skimage.feature import local_binary_pattern
+import metric_learn
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -31,7 +32,9 @@ class PCA:
     def fit(self, A, labels):
         """ Fits the PCA with the given feature vector and the number of components """
         A = A.T
-
+        
+        num_people = np.max(labels)
+        num_points = np.shape(labels)[0]/num_people
         self.mean = np.mean(A, axis=1)
         print "The dimensions of the mean face are: {0}".format(self.mean.shape)
 
@@ -39,7 +42,7 @@ class PCA:
         for col in range(A.shape[1]):
             A[:, col] = A[:, col] - self.mean
 
-        n_components = A.shape[1]
+        n_components = int(A.shape[1])
         # Compute the inner feature covariance for simplifying computation
         self.cov = np.matrix(A.T) * np.matrix(A)
         self.cov /= self.cov.shape[0]
@@ -62,6 +65,13 @@ class PCA:
         self.selected_eigen_vecs /= norms
         self.A_space = np.matrix(self.selected_eigen_vecs.T) * np.matrix(A)
         # Need to return values to be used in cascaded classifier systems
+        # (_,feats) = self.A_space.shape
+        #self.new_space = np.zeros((num_people, num_points, feats))
+        #for i in xrange(num_people):
+        #  for j in xrange(num_points):
+        #    self.new_space[i,j,:] = self.A_space[i*num_points+j,:]
+            
+        # TODO: Change the following return to the reshaped vals
         return self.selected_eigen_vecs, self.A_space
 
     def transform(self, y):

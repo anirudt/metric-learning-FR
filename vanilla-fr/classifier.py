@@ -164,3 +164,24 @@ class LBP:
 
     def update(self, features, labels):
         return self.model.update(features, labels)
+
+class LMNN:
+    """Class to abstract implementation of LMNN."""
+    def __init__(k=3):
+        self.k = k
+        self.eigenvecs = None
+        self.space = None
+        self.space_model = PCA()
+        self.metric_model = metric_learn.LMNN(k)
+        
+    def fit(feats, labels):
+        # Fit the data with PCA first.
+        self.eigenvecs, self.space = self.space_model.fit(feats, labels)
+        return self.metric_model.fit(self.space, labels)
+
+    def transform(y):
+        # Transform using PCA first.
+        test_proj, _ = self.space_model.transform(y)
+
+        # On the projection in the resultant space, apply LMNN.
+        return self.model.transform(test_proj)

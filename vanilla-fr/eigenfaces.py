@@ -197,4 +197,4 @@ def main(classifier_str, database):
     return 1
 
 if __name__ == '__main__':
-    main("pca", "ATT")
+    main("lmnn", "ATT")

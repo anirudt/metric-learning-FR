@@ -3,7 +3,8 @@ import pdb
 import cv2
 import logging
 from skimage.feature import local_binary_pattern
-import metric_learn
+from modshogun import RealFeatures, MulticlassLabels
+from modshogun import LMNN as shogun_LMNN
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -177,21 +178,34 @@ class LBP:
 
 class LMNN:
     """Class to abstract implementation of LMNN."""
-    def __init__(k=3):
+    def __init__(self, k=3, use_pca=False):
         self.k = k
         self.eigenvecs = None
         self.space = None
         self.space_model = PCA()
-        self.metric_model = metric_learn.LMNN(k)
+        self.use_pca = use_pca
+        self.metric_model = None
         
-    def fit(feats, labels):
-        # Fit the data with PCA first.
+    def fit(self, feats, labels):
         self.eigenvecs, self.space = self.space_model.fit(feats, labels)
-        return self.metric_model.fit(self.space, labels)
+        feat = RealFeatures(self.space.T)
+        self.metric_model = shogun_LMNN(feat, MulticlassLabels(labels.astype(np.float64)), self.k)
+        self.metric_model.set_maxiter(2000)
+        self.metric_model.train()
 
-    def transform(y):
+        self.linear_transform = self.metric_model.get_linear_transform()
+
+        self.projected_data = np.dot(self.linear_transform, self.space.T)
+        # Fit the data with PCA first.
+        # pdb.set_trace()
+        return self.eigenvecs, self.projected_data
+
+    def transform(self, y):
         # Transform using PCA first.
         test_proj, _ = self.space_model.transform(y)
 
         # On the projection in the resultant space, apply LMNN.
-        return self.model.transform(test_proj)
+        pdb.set_trace()
+        lk = np.dot(self.linear_transform, test_proj)
+
+        return lk, self.projected_data

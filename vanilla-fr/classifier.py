@@ -195,7 +195,7 @@ class LMNN:
 
         self.linear_transform = self.metric_model.get_linear_transform()
 
-        self.projected_data = np.dot(self.linear_transform, self.space.T)
+        self.projected_data = np.dot(self.linear_transform, self.space)
         # Fit the data with PCA first.
         # pdb.set_trace()
         return self.eigenvecs, self.projected_data
@@ -205,7 +205,6 @@ class LMNN:
         test_proj, _ = self.space_model.transform(y)
 
         # On the projection in the resultant space, apply LMNN.
-        pdb.set_trace()
         lk = np.dot(self.linear_transform, test_proj)
 
         return lk, self.projected_data

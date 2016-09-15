@@ -190,13 +190,14 @@ class LMNN:
         
     def fit(self, feats, labels):
         self.eigenvecs, self.space = self.space_model.fit(feats, labels)
-        feat = RealFeatures(self.space.T)
+        feat = RealFeatures(self.space)
         self.metric_model = shogun_LMNN(feat, MulticlassLabels(labels.astype(np.float64)), self.k)
         self.metric_model.set_maxiter(1000)
         self.metric_model.set_regularization(0.25)
         self.metric_model.set_obj_threshold(0.001)
         self.metric_model.set_stepsize(1e-7)
 
+        #pdb.set_trace()
         L = np.eye(self.space.shape[1])
         self.metric_model.train(L)
 

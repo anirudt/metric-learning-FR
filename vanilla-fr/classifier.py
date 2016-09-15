@@ -5,6 +5,7 @@ import logging
 from skimage.feature import local_binary_pattern
 from modshogun import RealFeatures, MulticlassLabels
 from modshogun import LMNN as shogun_LMNN
+import matplotlib.pyplot as plt
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -15,7 +16,8 @@ def nearest_neighbour(projs, test_proj):
     # distances = np.linalg.norm(projs - test_proj, axis=1)
     for col in range(projs.shape[1]):
         distances[col] = np.linalg.norm((projs[:, col] - test_proj))
-    print "Closest neighbour is {0}".format(distances)
+    print "Neighbours at {0}".format(distances)
+    print "Closest neighbour: {0}".format(np.argmin(distances))
     return np.argmin(distances)
 
 class PCA:
@@ -178,7 +180,7 @@ class LBP:
 
 class LMNN:
     """Class to abstract implementation of LMNN."""
-    def __init__(self, k=3, use_pca=False):
+    def __init__(self, k=6, use_pca=False):
         self.k = k
         self.eigenvecs = None
         self.space = None
@@ -190,12 +192,23 @@ class LMNN:
         self.eigenvecs, self.space = self.space_model.fit(feats, labels)
         feat = RealFeatures(self.space.T)
         self.metric_model = shogun_LMNN(feat, MulticlassLabels(labels.astype(np.float64)), self.k)
-        self.metric_model.set_maxiter(2000)
-        self.metric_model.train()
+        self.metric_model.set_maxiter(1000)
+        self.metric_model.set_regularization(0.25)
+        self.metric_model.set_obj_threshold(0.001)
+        self.metric_model.set_stepsize(1e-7)
 
+        L = np.eye(self.space.shape[1])
+        self.metric_model.train(L)
+
+        stats = self.metric_model.get_statistics()
+        #plt.plot(stats.obj.get())
+        #plt.grid(True)
+        #plt.show()
         self.linear_transform = self.metric_model.get_linear_transform()
 
         self.projected_data = np.dot(self.linear_transform, self.space)
+        norms = np.linalg.norm(self.projected_data, axis=0)
+        self.projected_data /= norms
         # Fit the data with PCA first.
         # pdb.set_trace()
         return self.eigenvecs, self.projected_data
@@ -206,5 +219,6 @@ class LMNN:
 
         # On the projection in the resultant space, apply LMNN.
         lk = np.dot(self.linear_transform, test_proj)
+        lk = lk/np.linalg.norm(lk, axis=0)
 
         return lk, self.projected_data

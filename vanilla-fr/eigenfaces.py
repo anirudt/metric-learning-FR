@@ -151,7 +151,7 @@ def multi_runner(classifier_str, database):
     Runs the training and test for all the different tilted faces. Returns a list of lists of eigenvalues and eigenvectors.
     """
     g = open("results.csv", 'ab')
-    numfolds = 4
+    numfolds = 8
     a = open("accuracy_"+classifier_str+"_"+str(numfolds)+".csv", "wb")
     wr = csv.writer(g)
     acc = csv.writer(a)
@@ -190,7 +190,7 @@ def main(classifier_str, database):
     if database == "KGP":
         (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (10, 20, 2, 10, (100, 100))
     elif database == "ATT":
-        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (20, 80, 4, 10, (92, 112))
+        (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (10, 80, 8, 10, (92, 112))
     print "sizes are ",(NUM_IMGS, IMGS_PER_PERSON, dims) 
 
     multi_runner(classifier_str, database)

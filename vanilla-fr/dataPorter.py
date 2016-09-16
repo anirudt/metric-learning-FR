@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from sklearn.datasets import fetch_lfw_people
 
 def import_custom_training_set(NUM_PEOPLE, IMGS_PER_PERSON, opt):
     """ This function provides mean corrected images from the custom IIT KGP dataset
@@ -42,3 +43,9 @@ def import_att_testing_set(person, test_num, opt):
     else:
         return np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(person)+"/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64)
 
+# Due to the largeness of the dataset, we import the dataset
+# at once and then slice it when needed.
+def import_lfw_training_set():
+    """ Downloading the lfw training set."""
+    data = fetch_lfw_people()
+    return data.data, data.targets

@@ -1,13 +1,13 @@
 #!/usr/bin/python
 import numpy as np
 from time import time
-from sklearn.decomposition import PCA
 import cv2
 import pdb
 import csv
 import classifier
 import dataPorter
 from metric_learn import LMNN, ITML_Supervised, LSML_Supervised, SDML_Supervised
+from sklearn.cross_validation import train_test_split
 
 """ Script for EigenFace Method of Face Recognition """
 
@@ -41,6 +41,10 @@ str2traindatabase = { "KGP": dataPorter.import_custom_training_set,
 
 str2testdatabase = { "KGP": dataPorter.import_custom_testing_set,
                      "ATT": dataPorter.import_att_testing_set}
+
+str2complete = { "KGP": None,
+                 "ATT": dataPorter.import_att_complete_set,
+                 "LFW": dataPorter.import_lfw_complete_set}
 
 str2ravelling = {"pca": 'ravel',
                  "pcalda": 'ravel',
@@ -87,17 +91,13 @@ def pca_lda(face_matrix, pca, lda, labels):
 
     return [2, pca, lda, selected_eigen_vecs_pca, selected_eigen_vecs_lda, lda_projection]
 
-def train(classifier_str, database, training_set_idx):
+def train(classifier_str, database, face_matrix, labels):
     """ Get data, train, get the Eigenvalues and store them."""
-    face_matrix, labels = str2traindatabase[database](NUM_PEOPLE, IMGS_PER_PERSON, str2ravelling[classifier_str], training_set_idx)
-
     print face_matrix.shape
 
     if classifier_str in str2classifier:
         model = str2classifier[classifier_str]
         trained_bundle = model.fit(face_matrix, labels)
-        #arr = LMNN(k=3)
-        #arr.fit(trained_bundle[1], labels)
         return [1, model, trained_bundle]
         # TODO: Handle this trained_bundle in a standard way
     else:
@@ -106,17 +106,14 @@ def train(classifier_str, database, training_set_idx):
             lda = str2classifier[classifier_str[3:]]
             trained_bundle = pca_lda(face_matrix, pca, lda, labels)
             return trained_bundle
-        # Add more hybrid varieties here. If they are standalone 
-        # classifier_strs, make a class out of it.
 
-def test(person, tilt_idx, trained_bundle, classifier_str, database):
+def test(classifier_str, database, X_test, y_test, y_train, trained_bundle):
     """ Acquire a new image and get the data. """
-    test_image = str2testdatabase[database](person, tilt_idx, str2ravelling[classifier_str])
-    
-    c = 0
     if trained_bundle[0] == 1:
         model = trained_bundle[1]
-        test_proj, space = model.transform(test_image)
+        test_proj, space = model.transform(X_test)
+        accuracy = classifier.sk_nearest_neighbour(space.T, y_train, test_proj.T, y_test)
+        return accuracy
 
         # FIXME: Remove this once the LBP has an option to give its space key
         if hasattr(space, 'shape'):
@@ -184,6 +181,20 @@ def multi_runner(classifier_str, database):
 
     return 0
 
+def new_multi_runner(classifier_str, database):
+    X, y = str2complete[database](str2ravelling[classifier_str])
+    numfolds = 4
+    a = open("accuracy_"+classifier_str+"_"+str(numfolds)+".csv", "wb")
+    acc = csv.writer(a)
+    X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=1.0/numfolds,random_state=42)
+    # Train the model now.
+    trained_bundle = train(classifier_str, database, X_train, y_train)
+
+    # val should be your accuracy.
+    accuracy = test(classifier_str, database, X_test, y_test, y_train, trained_bundle)
+
+    # To store accuracies of several classifiers.
+    return accuracy
 
 def main(classifier_str, database):
     global NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, dims
@@ -193,9 +204,11 @@ def main(classifier_str, database):
         (NUM_PEOPLE, NUM_IMGS, IMGS_PER_PERSON, TOT_IMGS_PP, dims) = (10, 40, 4, 10, (92, 112))
     print "sizes are ",(NUM_IMGS, IMGS_PER_PERSON, dims) 
 
-    multi_runner(classifier_str, database)
-    return 1
+    #multi_runner(classifier_str, database)
+    accuracy = new_multi_runner(classifier_str, database)
+    return accuracy
 
 if __name__ == '__main__':
-    main("lmnn", "ATT")
+    acc1 = main("pca", "ATT")
+    print "Accuracy for PCA: ", acc1
     main("pcalda", "ATT")

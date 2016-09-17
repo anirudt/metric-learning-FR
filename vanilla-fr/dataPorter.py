@@ -43,21 +43,9 @@ def import_att_testing_set(person, test_num, opt):
     else:
         return np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(person)+"/"+str(test_num)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64)
 
-def import_att_complete_set(opt):
-    """ AT&T Face Dataset, complete import."""
-    if opt == 'ravel':
-        face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num+1)+"/"+str(idx+1)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64).ravel() for num in range(40) for idx in range(10)], dtype=np.float64)
-    else:
-        face_matrix = np.array([ np.array(cv2.imread("/home/anirudt/Datasets/orl_faces/s"+str(num+1)+"/"+str(idx+1)+".pgm", cv2.IMREAD_GRAYSCALE), dtype=np.float64) for num in range(40) for idx in range(10)], dtype=np.float64)
-    labels = np.array([num+1 for num in range(40) for _ in range(10)], dtype=np.int32)
-
-    print "ATT feature set ", face_matrix.shape
-    return face_matrix, labels 
-
 # Due to the largeness of the dataset, we import the dataset
 # at once and then slice it when needed.
-def import_lfw_complete_set(opt):
+def import_lfw_training_set():
     """ Downloading the lfw training set."""
-    #TODO: Ravel on demand.
     data = fetch_lfw_people()
-    return data.data, data.target
+    return data.data, data.targets

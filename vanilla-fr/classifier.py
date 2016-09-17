@@ -6,8 +6,7 @@ from skimage.feature import local_binary_pattern
 from modshogun import RealFeatures, MulticlassLabels
 from modshogun import LMNN as shogun_LMNN
 import matplotlib.pyplot as plt
-from metric_learn import ITML_Supervised
-from sklearn.neighbors.nearest_centroid import NearestCentroid
+#from metric_learn import ITML_Supervised
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -21,16 +20,6 @@ def nearest_neighbour(projs, test_proj):
     print "Neighbours at {0}".format(distances)
     print "Closest neighbour: {0}".format(np.argmin(distances))
     return np.argmin(distances)
-
-def sk_nearest_neighbour(X_train, y_train, X_test, y_test):
-    """ Wrapper over sklearn's nearest neighbor. """
-    clf = NearestCentroid()
-    clf.fit(X_train, y_train)
-    c = 0
-    y_pred = clf.predict(X_test)
-    c = sum(y_pred == y_test)
-    accuracy = c * 100.0 / len(y_test)
-    return accuracy
 
 class PCA:
     """ Class to abstract implementations of PCA. """
@@ -92,9 +81,8 @@ class PCA:
     def transform(self, y):
         """ Transforms the given test data with the developed model"""
         y = y.T
-        for col in range(y.shape[1]):
-            y[:, col] = y[:, col] - self.mean
-        self.test_projection = np.matrix(self.selected_eigen_vecs.T) * np.matrix(y)
+        y = y - self.mean
+        self.test_projection = np.matrix(self.selected_eigen_vecs.T) * np.matrix(y).T
         return self.test_projection, self.A_space
         
 class LDA:

@@ -2,13 +2,14 @@ import numpy as np
 import pdb
 import cv2
 import logging
+from sklearn.utils.validation import check_array
+from sklearn.base import BaseEstimator, TransformerMixin
 from skimage.feature import local_binary_pattern
 from modshogun import RealFeatures, MulticlassLabels
 from modshogun import LMNN as shogun_LMNN
 import matplotlib.pyplot as plt
 from metric_learn import ITML_Supervised
 from sklearn.neighbors.nearest_centroid import NearestCentroid
-from sklearn.lda import LDA as sk_LDA
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -194,38 +195,47 @@ class LBP:
     def update(self, features, labels):
         return self.model.update(features, labels)
 
-class LMNN:
+class LMNN(BaseEstimator):
     """Class to abstract implementation of LMNN."""
-    def __init__(self, k=3, use_pca=False):
+    def __init__(self, k=3, min_iter=50, max_iter=1000, learn_rate=1e-7,
+                 regularization=0.50, convergence_tol=0.001, use_pca=False):
         self.k = k
         self.eigenvecs = None
         self.space = None
         self.use_pca = use_pca
         self.metric_model = None
+        self.min_iter = min_iter
+        self.max_iter = max_iter
+        self.learn_rate = learn_rate
+        self.convergence_tol = convergence_tol
+        self.regularization = regularization
+        print self.k, self.min_iter, self.max_iter, self.learn_rate, self.regularization, self.convergence_tol
         
     def fit(self, feats, labels):
+        #feats = check_array(feats)
+        feats = feats.astype(np.float64)
         feat = RealFeatures(feats.T)
         self.metric_model = shogun_LMNN(feat, MulticlassLabels(labels.astype(np.float64)), self.k)
-        self.metric_model.set_maxiter(1000)
-        self.metric_model.set_regularization(0.50)
-        self.metric_model.set_obj_threshold(0.001)
-        self.metric_model.set_stepsize(1e-7)
+        self.metric_model.set_maxiter(self.max_iter)
+        self.metric_model.set_regularization(self.regularization)
+        self.metric_model.set_obj_threshold(self.convergence_tol)
+        self.metric_model.set_stepsize(self.learn_rate)
 
-        #pdb.set_trace()
         self.metric_model.train()
 
         stats = self.metric_model.get_statistics()
+        #pdb.set_trace()
         #plt.plot(stats.obj.get())
         #plt.grid(True)
         #plt.show()
         self.linear_transform = self.metric_model.get_linear_transform()
 
-        self.projected_data = np.dot(self.linear_transform, feats.T)
+        #self.projected_data = np.dot(self.linear_transform, feats.T)
         #norms = np.linalg.norm(self.projected_data, axis=0)
         #self.projected_data /= norms
         # Fit the data with PCA first.
         # pdb.set_trace()
-        return self.projected_data
+        return self
 
     def transform(self, y):
         # On the projection in the resultant space, apply LMNN.

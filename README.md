@@ -4,8 +4,10 @@ This is a Face Recognition learning repo for research.
 ## Immediate TODOs:
 - [ ] Get ITML to work.
 - [ ] Conduct parameter tuning.
+- [ ] Log the params for the algorithms.
 
 ## TODO:
+- [ ] Conduct an ensemble classifier on all of the metric learning based techniques.
 - [X] Port LFW: http://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html
 - [X] Test why the 40 img dataset gave a segfault: Done, this is because we fed a k > number of points per label.
 - [X] Do the preprocessing as conducted by them, and try out kNN with PCA on Euclidean and Mahalanobis distance, using

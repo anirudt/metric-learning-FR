@@ -103,8 +103,9 @@ print("done in %0.3fs" % (time() - t0))
 
 # Try LMNN here.
 print("Trying LMNN")
+param_grid = {''}
 lmnn = classifier.LMNN()
-X_tr = lmnn.fit(X_train_pca, y_train)
+X_tr = lmnn.fit(X_train_pca, y_train).transform(X_train_pca)
 X_te = lmnn.transform(X_test_pca)
 
 acc, y_pred = classifier.sk_nearest_neighbour(X_tr.T, y_train, X_te.T, y_test)
@@ -133,6 +134,8 @@ print(clf.best_estimator_)
 print("Predicting people's names on the test set")
 t0 = time()
 y_pred = clf.predict(X_te.T)
+acc = 100.0*sum(y_pred == y_test) / len(y_test)
+print("accuracy = %s",acc)
 print("done in %0.3fs" % (time() - t0))
 
 print(classification_report(y_test, y_pred, target_names=target_names))
@@ -160,6 +163,8 @@ print(clf.best_estimator_)
 print("Predicting people's names on the test set")
 t0 = time()
 y_pred = clf.predict(X_test_pca)
+acc = 100.0*sum(y_pred == y_test) / len(y_test)
+print("accuracy = %s",acc)
 print("done in %0.3fs" % (time() - t0))
 
 print(classification_report(y_test, y_pred, target_names=target_names))

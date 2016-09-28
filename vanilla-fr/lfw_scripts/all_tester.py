@@ -97,39 +97,41 @@ def main(opt):
     print("done in %0.3fs" % (time() - t0))
 
     eigenfaces = pca.components_.reshape((n_components, h, w))
-
     print("Projecting the input data on the eigenfaces orthonormal basis")
     t0 = time()
     X_train_pca = pca.transform(X_train)
     X_test_pca = pca.transform(X_test)
     print("done in %0.3fs" % (time() - t0))
 
-    # Try LMNN here.
-    a = time()
-    print("Trying LMNN")
-    acc, y_pred = generic_model_fitter('lmnn', X_train_pca, y_train, X_test_pca, y_test)
-    print("accuracy = %s",acc)
-    print(classification_report(y_test, y_pred, target_names=target_names))
-    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+    if opt is "serial":
+        """ Opt for the serialized Implementation """
+        a = time()
+        print("Trying LMNN")
+        acc, y_pred = generic_model_fitter('lmnn', X_train_pca, y_train, X_test_pca, y_test)
+        print("accuracy = %s",acc)
+        print(classification_report(y_test, y_pred, target_names=target_names))
+        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
 
-    ###############################################################################
-    print("Trying LSML")
-    acc, y_pred = generic_model_fitter('lsml', X_train_pca, y_train, X_test_pca, y_test)
-    print("accuracy = %s",acc)
-    print(classification_report(y_test, y_pred, target_names=target_names))
-    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+        ###############################################################################
+        print("Trying LSML")
+        acc, y_pred = generic_model_fitter('lsml', X_train_pca, y_train, X_test_pca, y_test)
+        print("accuracy = %s",acc)
+        print(classification_report(y_test, y_pred, target_names=target_names))
+        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
-    ###############################################################################
-    print("Trying SDML")
-    acc, y_pred = generic_model_fitter('sdml', X_train_pca, y_train, X_test_pca, y_test)
-    print("accuracy = %s",acc)
-    print(classification_report(y_test, y_pred, target_names=target_names))
-    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+        ###############################################################################
+        print("Trying SDML")
+        acc, y_pred = generic_model_fitter('sdml', X_train_pca, y_train, X_test_pca, y_test)
+        print("accuracy = %s",acc)
+        print(classification_report(y_test, y_pred, target_names=target_names))
+        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
-    b = time()
-    print("Total time taken for all this: {0}".format(b-a))
+        b = time()
+        print("Total time taken for all this: {0}".format(b-a))
 
+    else:
+        """TODO:  Opt for the parallel thread implementation. """
     ###############################################################################
     print("Without the LMNN structure")
     # Train a SVM classification model
@@ -158,4 +160,4 @@ def main(opt):
     print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
 if __name__ == "__main__":
-    main("only_ml")
+    main("serial")

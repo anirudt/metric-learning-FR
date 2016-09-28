@@ -6,7 +6,7 @@ from skimage.feature import local_binary_pattern
 from modshogun import RealFeatures, MulticlassLabels
 from modshogun import LMNN as shogun_LMNN
 import matplotlib.pyplot as plt
-#from metric_learn import ITML_Supervised
+from metric_learn import ITML_Supervised
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -191,7 +191,6 @@ class LMNN:
         
     def fit(self, feats, labels):
         self.eigenvecs, self.space = self.space_model.fit(feats, labels)
-        pdb.set_trace()
         feat = RealFeatures(self.space)
         self.metric_model = shogun_LMNN(feat, MulticlassLabels(labels.astype(np.float64)), self.k)
         self.metric_model.set_maxiter(1000)
@@ -225,14 +224,20 @@ class LMNN:
         lk = lk/np.linalg.norm(lk, axis=0)
 
         return lk, self.projected_data
-class ITML():
+class ITML:
     def __init__(self, num_constraints=200):
+        self.space_model = PCA()
         self.metric_model = ITML_Supervised(num_constraints)
 
-    def fit(self, features, labels):
+    def fit(self, feats, labels):
         """Fits the model to the prescribed data."""
-        return self.metric_model.fit(features, labels)
+        pdb.set_trace()
+        self.eigenvecs, self.space = self.space_model.fit(feats, labels)
+        pdb.set_trace()
+        self.metric_model.fit(self.space.T, labels)
 
     def transform(self, y):
         """Transforms the test data according to the model"""
+        test_proj, _ = self.space_model.transform(y)
+        pdb.set_trace()
         return self.metric_model.transform(y)

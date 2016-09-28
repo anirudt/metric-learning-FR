@@ -1,6 +1,7 @@
 from modshogun import LMNN, RealFeatures, MulticlassLabels
 import numpy as np
 import pdb
+from metric_learn import ITML_Supervised
 
 def test_LMNN():
     X = np.eye(80)
@@ -16,6 +17,12 @@ def test_LMNN():
     test_proj = np.dot(L, test_x.T)
     pdb.set_trace()
 
+def test_ITML():
+    X = np.random.rand(40, 40)
+    Y = np.array([i for j in range(2) for i in range(20)])
+    itml = ITML_Supervised(num_constraints=200)
+    itml.fit(X, Y)
+    pdb.set_trace()
 
 if __name__ == "__main__":
-    test_LMNN()
+    test_ITML()

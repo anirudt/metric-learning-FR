@@ -43,6 +43,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.decomposition import RandomizedPCA
 from sklearn.svm import SVC
 from metric_learn import LSML_Supervised as LSML
+from ensembler import generic_model_fitter
 
 
 print(__doc__)
@@ -102,14 +103,14 @@ X_train_pca = pca.transform(X_train)
 X_test_pca = pca.transform(X_test)
 print("done in %0.3fs" % (time() - t0))
 
-# Try LMNN here.
 print("Trying LSML")
-param_grid = {''}
-lsml = LSML(num_constraints=200)
-X_tr = lsml.fit(X_train_pca, y_train).transform(X_train_pca)
-X_te = lsml.transform(X_test_pca)
+acc, y_pred = generic_model_fitter('lsml', X_train_pca, y_train, X_test_pca, y_test)
+print("accuracy = %s",acc)
+print(classification_report(y_test, y_pred, target_names=target_names))
+print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
-acc, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
+###############################################################################
+# Try LMNN here.
 print("accuracy = %s",acc)
 print(classification_report(y_test, y_pred, target_names=target_names))
 print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))

@@ -34,7 +34,8 @@ ATT_DB = (40, 4, (92, 112))
 str2classifier = {"pca": classifier.PCA(),
                   "lda": classifier.LDA(),
                   "lbp": classifier.LBP(),
-                  "lmnn": classifier.LMNN()}
+                  "lmnn": classifier.LMNN(),
+                  "itml": classifier.ITML()}
 
 str2traindatabase = { "KGP": dataPorter.import_custom_training_set,
                       "ATT": dataPorter.import_att_training_set}
@@ -45,7 +46,8 @@ str2testdatabase = { "KGP": dataPorter.import_custom_testing_set,
 str2ravelling = {"pca": 'ravel',
                  "pcalda": 'ravel',
                  "lbp": 'unravel',
-                 "lmnn": 'ravel'}
+                 "lmnn": 'ravel',
+                 "itml": "ravel"}
 
 mls = [
         LMNN,
@@ -197,5 +199,6 @@ def main(classifier_str, database):
     return 1
 
 if __name__ == '__main__':
+    main("itml", "ATT")
     main("lmnn", "ATT")
-    main("pcalda", "ATT")
+

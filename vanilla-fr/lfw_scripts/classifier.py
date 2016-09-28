@@ -3,13 +3,14 @@ import pdb
 import cv2
 import logging
 from sklearn.utils.validation import check_array
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, ClassifierMixin
 from skimage.feature import local_binary_pattern
 from modshogun import RealFeatures, MulticlassLabels
 from modshogun import LMNN as shogun_LMNN
 import matplotlib.pyplot as plt
 from metric_learn import ITML_Supervised
 from sklearn.neighbors.nearest_centroid import NearestCentroid
+import operator
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -23,6 +24,17 @@ def nearest_neighbour(projs, test_proj):
     print "Neighbours at {0}".format(distances)
     print "Closest neighbour: {0}".format(np.argmin(distances))
     return np.argmin(distances)
+
+def sk_nearest_neighbour_proba(centroids, X_test_single):
+    """ Wrapper over sklearn's nearest neighbor. """
+    # TODO: Compute a softmax over the distances between each of them
+    probs = np.zeros(centroids.shape[0])
+    for cent in xrange(centroids.shape[0]):
+        probs[cent] = np.exp(-1*np.linalg.norm(centroids[cent,:] - X_test_single))
+    
+    probs /= np.sum(probs)
+    return probs
+
 
 def sk_nearest_neighbour(X_train, y_train, X_test, y_test):
     """ Wrapper over sklearn's nearest neighbor. """
@@ -195,7 +207,7 @@ class LBP:
     def update(self, features, labels):
         return self.model.update(features, labels)
 
-class LMNN(BaseEstimator):
+class LMNN:
     """Class to abstract implementation of LMNN."""
     def __init__(self, k=3, min_iter=50, max_iter=1000, learn_rate=1e-7,
                  regularization=0.50, convergence_tol=0.001, use_pca=False):
@@ -213,6 +225,9 @@ class LMNN(BaseEstimator):
         
     def fit(self, feats, labels):
         #feats = check_array(feats)
+        self.X_tr = feats
+        self.y_train = labels
+
         feats = feats.astype(np.float64)
         feat = RealFeatures(feats.T)
         self.metric_model = shogun_LMNN(feat, MulticlassLabels(labels.astype(np.float64)), self.k)
@@ -244,7 +259,18 @@ class LMNN(BaseEstimator):
 
         return lk
 
-class ITML():
+    def predict_proba(self, X_te):
+        """Predicts the probabilities of each of the test samples"""
+        test_samples = X_te.shape[0]
+        probabilities = np.zeros(test_samples)
+        clf = NearestCentroid()
+        clf.fit(self.X_tr, self.y_train)
+        centroids_ = clf.centroids_
+        for sample in xrange(test_samples):
+            probabilities[samples] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
+        return probabilities
+
+class ITML:
     def __init__(self, num_constraints=200):
         self.metric_model = ITML_Supervised(num_constraints)
 
@@ -255,3 +281,60 @@ class ITML():
     def transform(self, y):
         """Transforms the test data according to the model"""
         return self.metric_model.transform(y)
+
+class LSML:
+    def __init__(self):
+        self.metric_model = LSML()
+        self.X_tr = None
+        self.y_train = None
+        self.X_te = None
+
+    def fit(self, X_tr, y_train):
+        """Fits the model to the prescribed data."""
+        self.X_tr = X_tr
+        self.labels = y_train
+        return self.metric_model.fit(X_tr, y_train)
+
+    def transform(self, X):
+        """Transforms the test data according to the model"""
+        return self.metric_model.transform(X)
+
+    def predict_proba(self, X_te):
+        """Predicts the probabilities of each of the test samples"""
+        test_samples = X_te.shape[0]
+        probabilities = np.zeros(test_samples)
+        clf = NearestCentroid()
+        clf.fit(self.X_tr, self.y_train)
+        centroids = clf.centroids_
+        for sample in xrange(test_samples):
+            probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
+        return probabilities
+
+class SDML:
+    def __init__(self):
+        self.metric_model = SDML()
+        self.X_tr = None
+        self.y_train = None
+        self.X_te = None
+
+    def fit(self, X_tr, y_train):
+        """Fits the model to the prescribed data."""
+        self.X_tr = X_tr
+        self.labels = y_train
+        return self.metric_model.fit(X_tr, y_train)
+
+    def transform(self, X):
+        """Transforms the test data according to the model"""
+        return self.metric_model.transform(X)
+
+    def predict_proba(self, X_te):
+        """Predicts the probabilities of each of the test samples"""
+        test_samples = X_te.shape[0]
+        probabilities = np.zeros(test_samples)
+        clf = NearestCentroid()
+        clf.fit(self.X_tr, self.y_train)
+        centroids = clf.centroids_
+        for sample in xrange(test_samples):
+            probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
+        return probabilities
+

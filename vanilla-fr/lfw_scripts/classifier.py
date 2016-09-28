@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from metric_learn import ITML_Supervised
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 import operator
+from threading import Thread
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -35,12 +36,10 @@ def sk_nearest_neighbour_proba(centroids, X_test_single):
     probs /= np.sum(probs)
     return probs
 
-
 def sk_nearest_neighbour(X_train, y_train, X_test, y_test):
     """ Wrapper over sklearn's nearest neighbor. """
     clf = NearestCentroid()
     clf.fit(X_train, y_train)
-    c = 0
     y_pred = clf.predict(X_test)
     c = np.sum(y_pred == y_test)
     accuracy = c * 100.0 / len(y_test)
@@ -262,13 +261,14 @@ class LMNN:
     def predict_proba(self, X_te):
         """Predicts the probabilities of each of the test samples"""
         test_samples = X_te.shape[0]
-        probabilities = np.zeros(test_samples)
         clf = NearestCentroid()
         clf.fit(self.X_tr, self.y_train)
         centroids_ = clf.centroids_
+        probabilities = np.zeros(test_samples, centroids_.shape[0])
         for sample in xrange(test_samples):
             probabilities[samples] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities
+
 
 class ITML:
     def __init__(self, num_constraints=200):
@@ -302,10 +302,10 @@ class LSML:
     def predict_proba(self, X_te):
         """Predicts the probabilities of each of the test samples"""
         test_samples = X_te.shape[0]
-        probabilities = np.zeros(test_samples)
         clf = NearestCentroid()
         clf.fit(self.X_tr, self.y_train)
         centroids = clf.centroids_
+        probabilities = np.zeros(test_samples, centroids_.shape[0])
         for sample in xrange(test_samples):
             probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities
@@ -330,11 +330,23 @@ class SDML:
     def predict_proba(self, X_te):
         """Predicts the probabilities of each of the test samples"""
         test_samples = X_te.shape[0]
-        probabilities = np.zeros(test_samples)
         clf = NearestCentroid()
         clf.fit(self.X_tr, self.y_train)
         centroids = clf.centroids_
+        probabilities = np.zeros(test_samples, centroids_.shape[0])
         for sample in xrange(test_samples):
             probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities
 
+class MLThread(Thread):
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs={}, Verbose=None):
+        Thread.__init__(self, group, target, name, args, kwargs, Verbose)
+        self._return = None
+    def run(self):
+        if self._Thread__target is not None:
+            self._return = self._Thread__target(*self._Thread__args,
+                                                **self._Thread__kwargs)
+    def join(self):
+        Thread.join(self)
+        return self._return

@@ -8,7 +8,7 @@ from skimage.feature import local_binary_pattern
 from modshogun import RealFeatures, MulticlassLabels
 from modshogun import LMNN as shogun_LMNN
 import matplotlib.pyplot as plt
-from metric_learn import ITML_Supervised
+from metric_learn import ITML_Supervised, SDML_Supervised, LSML_Supervised
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 import operator
 from threading import Thread
@@ -256,7 +256,7 @@ class LMNN:
         lk = np.dot(self.linear_transform,y.T)
         #lk = lk/np.linalg.norm(lk, axis=0)
 
-        return lk
+        return lk.T
 
     def predict_proba(self, X_te):
         """Predicts the probabilities of each of the test samples"""
@@ -284,7 +284,7 @@ class ITML:
 
 class LSML:
     def __init__(self):
-        self.metric_model = LSML()
+        self.metric_model = LSML_Supervised(num_constraints=200)
         self.X_tr = None
         self.y_train = None
         self.X_te = None
@@ -312,7 +312,7 @@ class LSML:
 
 class SDML:
     def __init__(self):
-        self.metric_model = SDML()
+        self.metric_model = SDML_Supervised(num_constraints=200)
         self.X_tr = None
         self.y_train = None
         self.X_te = None

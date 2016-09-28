@@ -105,12 +105,30 @@ def main(opt):
     print("done in %0.3fs" % (time() - t0))
 
     # Try LMNN here.
+    a = time()
     print("Trying LMNN")
     acc, y_pred = generic_model_fitter('lmnn', X_train_pca, y_train, X_test_pca, y_test)
     print("accuracy = %s",acc)
     print(classification_report(y_test, y_pred, target_names=target_names))
     print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
+
+    ###############################################################################
+    print("Trying LSML")
+    acc, y_pred = generic_model_fitter('lsml', X_train_pca, y_train, X_test_pca, y_test)
+    print("accuracy = %s",acc)
+    print(classification_report(y_test, y_pred, target_names=target_names))
+    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+
+    ###############################################################################
+    print("Trying SDML")
+    acc, y_pred = generic_model_fitter('sdml', X_train_pca, y_train, X_test_pca, y_test)
+    print("accuracy = %s",acc)
+    print(classification_report(y_test, y_pred, target_names=target_names))
+    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+
+    b = time()
+    print("Total time taken for all this: {0}".format(b-a))
 
     ###############################################################################
     print("Without the LMNN structure")
@@ -125,7 +143,6 @@ def main(opt):
     print("done in %0.3fs" % (time() - t0))
     print("Best estimator found by grid search:")
     print(clf.best_estimator_)
-
 
     ###############################################################################
     # Quantitative evaluation of the model quality on the test set

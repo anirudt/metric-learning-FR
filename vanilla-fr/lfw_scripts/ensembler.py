@@ -1,5 +1,6 @@
 #!/usr/bin/python
-from metric_learn import LMNN, ITML, LSML, SDML, NCA
+from classifier import LMNN, ITML, LSML, SDML
+from metric_learn import NCA
 from threading import Thread
 import classifier
 

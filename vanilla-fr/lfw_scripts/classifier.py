@@ -255,18 +255,19 @@ class LMNN:
         # On the projection in the resultant space, apply LMNN.
         lk = np.dot(self.linear_transform,y.T)
         #lk = lk/np.linalg.norm(lk, axis=0)
-
+        
         return lk.T
 
     def predict_proba(self, X_te):
         """Predicts the probabilities of each of the test samples"""
         test_samples = X_te.shape[0]
+        self.X_tr = self.transform(self.X_tr)
         clf = NearestCentroid()
         clf.fit(self.X_tr, self.y_train)
-        centroids_ = clf.centroids_
-        probabilities = np.zeros(test_samples, centroids_.shape[0])
+        centroids = clf.centroids_
+        probabilities = np.zeros((test_samples, centroids.shape[0]))
         for sample in xrange(test_samples):
-            probabilities[samples] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
+            probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities
 
 
@@ -292,7 +293,7 @@ class LSML:
     def fit(self, X_tr, y_train):
         """Fits the model to the prescribed data."""
         self.X_tr = X_tr
-        self.labels = y_train
+        self.y_train = y_train
         return self.metric_model.fit(X_tr, y_train)
 
     def transform(self, X):
@@ -302,10 +303,11 @@ class LSML:
     def predict_proba(self, X_te):
         """Predicts the probabilities of each of the test samples"""
         test_samples = X_te.shape[0]
+        self.X_tr = self.transform(self.X_tr)
         clf = NearestCentroid()
         clf.fit(self.X_tr, self.y_train)
         centroids = clf.centroids_
-        probabilities = np.zeros(test_samples, centroids_.shape[0])
+        probabilities = np.zeros((test_samples, centroids.shape[0]))
         for sample in xrange(test_samples):
             probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities
@@ -320,7 +322,7 @@ class SDML:
     def fit(self, X_tr, y_train):
         """Fits the model to the prescribed data."""
         self.X_tr = X_tr
-        self.labels = y_train
+        self.y_train = y_train
         return self.metric_model.fit(X_tr, y_train)
 
     def transform(self, X):
@@ -330,10 +332,11 @@ class SDML:
     def predict_proba(self, X_te):
         """Predicts the probabilities of each of the test samples"""
         test_samples = X_te.shape[0]
+        self.X_tr = self.transform(self.X_tr)
         clf = NearestCentroid()
         clf.fit(self.X_tr, self.y_train)
         centroids = clf.centroids_
-        probabilities = np.zeros(test_samples, centroids_.shape[0])
+        probabilities = np.zeros((test_samples, centroids.shape[0]))
         for sample in xrange(test_samples):
             probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities

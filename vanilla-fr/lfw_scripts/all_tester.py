@@ -42,7 +42,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.decomposition import RandomizedPCA
 from sklearn.svm import SVC
-from ensembler import generic_model_fitter
+from ensembler import generic_model_fitter, assemble
 
 
 def main(opt):
@@ -132,6 +132,13 @@ def main(opt):
 
     else:
         """TODO:  Opt for the parallel thread implementation. """
+        a = time()
+        acc, y_pred = assemble(X_train_pca, y_train, X_test_pca, y_test, [1,1])
+        print("accuracy = %s",acc)
+        print(classification_report(y_test, y_pred, target_names=target_names))
+        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+        b = time()
+        print("Total time taken for all this: {0}".format(b-a))
     ###############################################################################
     print("Without the LMNN structure")
     # Train a SVM classification model
@@ -160,4 +167,4 @@ def main(opt):
     print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
 if __name__ == "__main__":
-    main("serial")
+    main("parallel")

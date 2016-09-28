@@ -1,15 +1,16 @@
 #!/usr/bin/python
-from classifier import LMNN, ITML, LSML, SDML
+from classifier import LMNN, ITML, LSML, SDML, MLThread
 from metric_learn import NCA
 from threading import Thread
 import classifier
+import numpy as np
 
 mls = {
     'lmnn': LMNN(),
-    'itml': ITML(),
+    #'itml': ITML(),
     'lsml': LSML(),
-    'sdml': SDML(),
-    'nca': NCA()
+    #'sdml': SDML(),
+    #'nca': NCA()
     }
 
 """
@@ -50,13 +51,14 @@ def assemble(X_train, y_train, X_test, y_test, weights):
   num_centroids = len(np.unique(y_train))
 
   probabilities = np.zeros((num_samples, num_centroids, num_classifiers))
-  for idx, ml in enumerate(mls):
-    thread[idx] = MLThread(target=generic_model_fitter_prob,args=(ml, X_train, y_train, X_test))
-    thread[idx].start()
+  for idx, key in enumerate(mls):
+    ml = mls[key]
+    threads[idx] = MLThread(target=generic_model_fitter_prob,args=(ml, X_train, y_train, X_test))
+    threads[idx].start()
 
   # Step 2: Combine all of them and use a baseline ensemble classifier
   for idx, _ in enumerate(mls):
-    probabilities[:,:,idx] = thread[idx].join()
+    probabilities[:,:,idx] = threads[idx].join()
 
   avg = np.average(probabilities, axis=2, weights=weights)
 

@@ -8,6 +8,10 @@ This is a Face Recognition learning repo for research.
 
 ## TODO:
 - [ ] Conduct an ensemble classifier on all of the metric learning based techniques.
+- [ ] Port the code to my machine, make using this
+```
+cmake -DCMAKE_INSTALL_PREFIX="$HOME/shogun-install" -DPythonModular=ON -DBUNDLE_EIGEN=ON ..
+```
 - [X] Port LFW: http://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html
 - [X] Test why the 40 img dataset gave a segfault: Done, this is because we fed a k > number of points per label.
 - [X] Do the preprocessing as conducted by them, and try out kNN with PCA on Euclidean and Mahalanobis distance, using

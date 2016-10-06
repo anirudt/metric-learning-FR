@@ -2,7 +2,6 @@ import numpy as np
 import pdb
 import cv2
 import logging
-from sklearn.utils.validation import check_array
 from sklearn.base import BaseEstimator, ClassifierMixin
 from skimage.feature import local_binary_pattern
 from modshogun import RealFeatures, MulticlassLabels
@@ -223,7 +222,6 @@ class LMNN:
         print self.k, self.min_iter, self.max_iter, self.learn_rate, self.regularization, self.convergence_tol
         
     def fit(self, feats, labels):
-        #feats = check_array(feats)
         self.X_tr = feats
         self.y_train = labels
 

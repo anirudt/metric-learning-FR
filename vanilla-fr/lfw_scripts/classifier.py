@@ -11,6 +11,7 @@ from metric_learn import ITML_Supervised, SDML_Supervised, LSML_Supervised
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 import operator
 from threading import Thread
+import os
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -344,6 +345,7 @@ class LDML:
         self.X_tr = None
         self.y_train = None
         self.X_te = None
+        self.L = None
 
     def fit(self, X_tr, y_train):
         """ Fits the LDML model 
@@ -352,6 +354,12 @@ class LDML:
             2. Call the Matlab script to a Matlab wrapper
             which calls ldml_learn and read the written matrix back. 
             3. Returns the X_tr transformed matrix. """
+        np.savetxt('X_tr.mat', X_tr)
+        np.savetxt('y_train.mat', y_train)
+
+        os.system('matlab -nodesktop < ldml_wrap_learn.m')
+
+        # TODO: Read the transformation back and store it into self.L
 
 class MLThread(Thread):
     def __init__(self, group=None, target=None, name=None,

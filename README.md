@@ -2,12 +2,12 @@
 This is a Face Recognition learning repo for research.
 
 ## Immediate TODOs:
-- [ ] Get ITML to work.
 - [ ] Conduct parameter tuning.
 - [ ] Log the params for the algorithms.
 
 ## TODO:
-- [ ] Conduct an ensemble classifier on all of the metric learning based techniques.
+- [X] Conduct an ensemble classifier on all of the metric learning based techniques.
+  Partly done, though hard voting is also required to be implemented.
 - [ ] Port the code to my machine, make using this
 ```
 cmake -DCMAKE_INSTALL_PREFIX="$HOME/shogun-install" -DPythonModular=ON -DBUNDLE_EIGEN=ON ..
@@ -21,3 +21,12 @@ the `get_distance()` API given by Shogun.
 - [ ] Modify the existing NN function to give a kNN, for better comparison.
 - [X] Mangle the data in the format required by the metric-learn module and feed it for results.
   Edit: Doing this inside the classful implementation itself.
+
+## Working Algorithms:
+- ITML
+- LMNN
+- LSML
+- SDML
+- LDML
+- NCA
+- RCA

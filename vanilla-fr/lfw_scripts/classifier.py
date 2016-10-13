@@ -268,7 +268,6 @@ class LMNN:
             probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities
 
-
 class ITML:
     def __init__(self, num_constraints=200):
         self.metric_model = ITML_Supervised(num_constraints)
@@ -338,6 +337,21 @@ class SDML:
         for sample in xrange(test_samples):
             probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities
+
+class LDML:
+    def __init__(self):
+        self.metric_model = None
+        self.X_tr = None
+        self.y_train = None
+        self.X_te = None
+
+    def fit(self, X_tr, y_train):
+        """ Fits the LDML model 
+        Steps include:
+            1. Write the data to a .mat file. 
+            2. Call the Matlab script to a Matlab wrapper
+            which calls ldml_learn and read the written matrix back. 
+            3. Returns the X_tr transformed matrix. """
 
 class MLThread(Thread):
     def __init__(self, group=None, target=None, name=None,

@@ -1,5 +1,5 @@
 import numpy as np
-import pdb
+import pdb, os, scipy
 import cv2
 import logging
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -11,7 +11,6 @@ from metric_learn import ITML_Supervised, SDML_Supervised, LSML_Supervised
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 import operator
 from threading import Thread
-import os
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -354,12 +353,34 @@ class LDML:
             2. Call the Matlab script to a Matlab wrapper
             which calls ldml_learn and read the written matrix back. 
             3. Returns the X_tr transformed matrix. """
+        self.X_tr = X_tr
+        self.y_train = y_train
         np.savetxt('X_tr.mat', X_tr)
         np.savetxt('y_train.mat', y_train)
 
         os.system('matlab -nodesktop < ldml_wrap_learn.m')
 
-        # TODO: Read the transformation back and store it into self.L
+        # Read the transformation back and store it into self.L
+        self.L = scipy.io.loadmat("L.mat")
+
+    def transform(self, y):
+        if y is None:
+            y = self.X_tr
+        return y.dot(self.L.T)
+
+    def predict_proba(self, X_te):
+        """Predicts the probabilities of each of the test samples. 
+        Ensure that the X_te passed to this function is transformed
+        before sending it here. """
+        test_samples = X_te.shape[0]
+        self.X_tr = self.transform(self.X_tr)
+        clf = NearestCentroid()
+        clf.fit(self.X_tr, self.y_train)
+        centroids = clf.centroids_
+        probabilities = np.zeros((test_samples, centroids.shape[0]))
+        for sample in xrange(test_samples):
+            probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
+        return probabilities
 
 class MLThread(Thread):
     def __init__(self, group=None, target=None, name=None,

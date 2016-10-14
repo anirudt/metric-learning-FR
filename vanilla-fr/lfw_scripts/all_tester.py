@@ -133,7 +133,7 @@ def main(opt):
     else:
         """TODO:  Opt for the parallel thread implementation. """
         a = time()
-        acc, y_pred = assemble(X_train_pca, y_train, X_test_pca, y_test, [1,1])
+        acc, y_pred = assemble(X_train_pca, y_train, X_test_pca, y_test, [1,1], 'soft')
         print("accuracy = %s",acc)
         print(classification_report(y_test, y_pred, target_names=target_names))
         print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))

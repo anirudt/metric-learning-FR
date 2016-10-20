@@ -280,9 +280,79 @@ class ITML:
         """Transforms the test data according to the model"""
         return self.metric_model.transform(y)
 
+    def predict_proba(self, X_te):
+        """Predicts the probabilities of each of the test samples"""
+        test_samples = X_te.shape[0]
+        self.X_tr = self.transform(self.X_tr)
+        clf = NearestCentroid()
+        clf.fit(self.X_tr, self.y_train)
+        centroids = clf.centroids_
+        probabilities = np.zeros((test_samples, centroids.shape[0]))
+        for sample in xrange(test_samples):
+            probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
+        return probabilities
+
 class LSML:
     def __init__(self):
         self.metric_model = LSML_Supervised(num_constraints=200)
+        self.X_tr = None
+        self.y_train = None
+        self.X_te = None
+
+    def fit(self, X_tr, y_train):
+        """Fits the model to the prescribed data."""
+        self.X_tr = X_tr
+        self.y_train = y_train
+        return self.metric_model.fit(X_tr, y_train)
+
+    def transform(self, X):
+        """Transforms the test data according to the model"""
+        return self.metric_model.transform(X)
+
+    def predict_proba(self, X_te):
+        """Predicts the probabilities of each of the test samples"""
+        test_samples = X_te.shape[0]
+        self.X_tr = self.transform(self.X_tr)
+        clf = NearestCentroid()
+        clf.fit(self.X_tr, self.y_train)
+        centroids = clf.centroids_
+        probabilities = np.zeros((test_samples, centroids.shape[0]))
+        for sample in xrange(test_samples):
+            probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
+        return probabilities
+
+class RCA:
+    def __init__(self):
+        self.metric_model = SDML_Supervised(num_constraints=200)
+        self.X_tr = None
+        self.y_train = None
+        self.X_te = None
+
+    def fit(self, X_tr, y_train):
+        """Fits the model to the prescribed data."""
+        self.X_tr = X_tr
+        self.y_train = y_train
+        return self.metric_model.fit(X_tr, y_train)
+
+    def transform(self, X):
+        """Transforms the test data according to the model"""
+        return self.metric_model.transform(X)
+
+    def predict_proba(self, X_te):
+        """Predicts the probabilities of each of the test samples"""
+        test_samples = X_te.shape[0]
+        self.X_tr = self.transform(self.X_tr)
+        clf = NearestCentroid()
+        clf.fit(self.X_tr, self.y_train)
+        centroids = clf.centroids_
+        probabilities = np.zeros((test_samples, centroids.shape[0]))
+        for sample in xrange(test_samples):
+            probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
+        return probabilities
+
+class NCA:
+    def __init__(self):
+        self.metric_model = SDML_Supervised(num_constraints=200)
         self.X_tr = None
         self.y_train = None
         self.X_te = None

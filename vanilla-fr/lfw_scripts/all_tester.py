@@ -42,7 +42,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.decomposition import RandomizedPCA
 from sklearn.svm import SVC
-from ensembler import generic_model_fitter, assemble
+from ensembler import generic_model_fitter, assemble_parallel, assemble_series
 
 
 def main(opt):
@@ -104,7 +104,15 @@ def main(opt):
     print("done in %0.3fs" % (time() - t0))
 
     if opt is "serial":
-        """ Opt for the serialized Implementation """
+        a = time()
+        acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1], ['lmnn', 'lsml'], 'hard')
+        print("accuracy = %s",acc)
+        pdb.set_trace()
+        print(classification_report(y_test, y_pred, target_names=target_names))
+        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+
+
+        """ Opt for the serialized Implementation
         a = time()
         print("Trying LMNN")
         acc, y_pred = generic_model_fitter('lmnn', X_train_pca, y_train, X_test_pca, y_test)
@@ -129,11 +137,11 @@ def main(opt):
 
         b = time()
         print("Total time taken for all this: {0}".format(b-a))
-
+        """
     else:
         """TODO:  Opt for the parallel thread implementation. """
         a = time()
-        acc, y_pred = assemble(X_train_pca, y_train, X_test_pca, y_test, [1,1], 'soft')
+        acc, y_pred = assemble_parallel(X_train_pca, y_train, X_test_pca, y_test, [1,1], 'soft')
         print("accuracy = %s",acc)
         print(classification_report(y_test, y_pred, target_names=target_names))
         print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
@@ -167,4 +175,4 @@ def main(opt):
     print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
 if __name__ == "__main__":
-    main("parallel")
+    main("serial")

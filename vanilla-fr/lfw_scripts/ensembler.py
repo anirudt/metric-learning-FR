@@ -4,14 +4,15 @@ from metric_learn import NCA
 from threading import Thread
 import classifier
 import numpy as np
+import pdb
 
 mls = {
     'lmnn': LMNN(),
-    #'itml': ITML(),
+    'itml': ITML(),
     'lsml': LSML(),
-    #'sdml': SDML(),
-    'nca': NCA(),
-    'rca': RCA()
+    'sdml': SDML(),
+    #'nca': NCA(),
+    #'rca': RCA()
     }
 
 """
@@ -23,8 +24,6 @@ For the kNN-like probabilities, we use a modified Softmax
 for determining them.
 """
 
-str2func = {'soft': generic_model_fitter_prob,
-            'hard': generic_model_fitter}
 
 def generic_model_fitter_prob(ml, X_train, y_train, X_test, y_test):
   """ Takes a generic ML model and fits it with the data,
@@ -33,7 +32,7 @@ def generic_model_fitter_prob(ml, X_train, y_train, X_test, y_test):
   X_te = ml.transform(X_test)
   return ml.predict_proba(X_te)
 
-def generic_model_fitter(ml, X_train, y_train, X_test, y_test):
+def generic_model_fitter(opt, X_train, y_train, X_test, y_test):
   """ Takes a generic ML model and fits it with the data,
   can be used for unit testing. """
   ml = mls[opt]
@@ -42,10 +41,64 @@ def generic_model_fitter(ml, X_train, y_train, X_test, y_test):
   accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
   return accuracy, y_pred
 
-def assemble(X_train, y_train, X_test, y_test, weights, opt):
+# Dict for reference
+str2func = {'soft': generic_model_fitter_prob,
+            'hard': generic_model_fitter}
+
+def assemble_series(X_train, y_train, X_test, y_test, weights, algos, opt):
+    """ Receives the training and test set samples and
+    performs metric learning algorithms followed by a
+    baseline ensemble classifier, using series techniques"""
+
+    num_classifiers = len(algos)
+    num_samples = X_test.shape[0]
+    num_centroids = len(np.unique(y_train))
+
+    if opt is "soft":
+        probabilities = np.zeros((num_samples, num_centroids, num_classifiers))
+    else:
+        all_predictions = np.zeros((num_classifiers, num_samples))
+        accuracies = np.zeros((num_classifiers, 1))
+        print 'Printing all accuracies'
+    for idx, algo in enumerate(algos):
+        # Call one by one and append pred and acc for hard
+        # and proba for soft.
+        if opt is "soft":
+            probabilities[:,:,idx] = generic_model_fitter_prob(mls[algo], \
+                    X_train, y_train, X_test, y_test)
+        else:
+            accuracies[idx], all_predictions[idx,:] = generic_model_fitter(algo, \
+                    X_train, y_train, X_test, y_test)
+            print accuracies[idx]
+
+    # Start ensemble work.
+    if opt is "soft":
+        # Do necessary action
+        avg = np.average(probabilities, axis=2, weights=weights)
+        y_pred = np.argmax(avg, axis=1)
+        c = np.sum(y_pred == y_test)
+        accuracy = c*100.0/len(y_test)
+        return accuracy, y_pred
+
+    else:
+        # Do necessary action
+        # Across every sample, take a majority of the votes
+        all_predictions = np.array(all_predictions, dtype=np.int32)
+        majority_pred = np.zeros(num_samples)
+        for sample in xrange(all_predictions.shape[1]):
+            majority_pred[sample] = np.bincount(all_predictions[:, sample]).argmax()
+
+        majority_pred = majority_pred.T
+        majority_pred = np.array(majority_pred, dtype=np.int32)
+        c = np.sum(majority_pred == y_test)
+        accuracy = c * 100.0 / num_samples
+        print accuracy, majority_pred
+        return accuracy, majority_pred
+
+def assemble_parallel(X_train, y_train, X_test, y_test, weights, opt):
   """ Receives the training and test set samples and
   performs metric learning algorithms followed by a
-  baseline ensemble classifier """
+  baseline ensemble classifier using parallel techniques. """
 
   threads = [None]*len(mls.keys())
 

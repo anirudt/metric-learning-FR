@@ -17,7 +17,7 @@ from metric_learn import NCA as NCA_ml
 from metric_learn import RCA as RCA_ml
 from metric_learn import LFDA as LFDA_ml
 
-logging.basicConfig(filename="logs", level=logging.DEBUG)
+logging.basicConfig(filename="log_cl", level=logging.DEBUG)
 
 # Helper Functions
 def nearest_neighbour(projs, test_proj):

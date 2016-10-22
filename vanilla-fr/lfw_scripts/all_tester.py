@@ -105,7 +105,7 @@ def main(opt, runall=False):
     if opt is "serial":
         if not runall:
             a = time()
-            acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1], ['ldml'], 'hard')
+            acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1], ['lmnn', 'lsml', 'ldml', 'rca', 'lfda'], 'hard')
             print("accuracy = %s",acc)
             print(classification_report(y_test, y_pred, target_names=target_names))
             print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))

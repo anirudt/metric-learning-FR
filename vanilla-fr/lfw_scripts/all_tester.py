@@ -105,19 +105,19 @@ def main(opt, runall=False):
     if opt is "serial":
         if not runall:
             a = time()
-            acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1], ['lmnn', 'lsml', 'ldml', 'rca', 'lfda'], 'hard')
+            acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1,1,1,1], ['lmnn', 'lsml', 'ldml', 'rca', 'lfda'], 'soft', "weighted")
             print("accuracy = %s",acc)
             print(classification_report(y_test, y_pred, target_names=target_names))
             print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
             b = time()
 
         else:
-            mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda'])
+            mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
             for ml in mls:
                 if len(ml) == 0:
                     continue
                 print(ml)
-                acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1], ml, 'hard')
+                acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1,1,1,1], ml, 'hard')
                 print("accuracy = %s",acc)
                 print(classification_report(y_test, y_pred, target_names=target_names))
                 print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
@@ -186,4 +186,4 @@ def main(opt, runall=False):
     print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
 if __name__ == "__main__":
-    main("serial")
+    main("serial", runall=True)

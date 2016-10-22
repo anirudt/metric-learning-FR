@@ -35,28 +35,44 @@ def list_mls(arr):
     return combs
 
 
-def generic_model_fitter_prob(ml, X_train, y_train, X_test, y_test):
+def generic_model_fitter_prob(ml, X_train, y_train, X_test, y_test, algo_opts=None):
   """ Takes a generic ML model and fits it with the data,
   can be used for system testing. """
   ml.fit(X_train, y_train)
   X_te = ml.transform(X_test)
-  return ml.predict_proba(X_te)
+  probabilities = ml.predict_proba(X_te)
+  if algo_opts is "weighted":
+      # TODO: 
+      accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_tr, y_train)
+      training_error = (100.0 - accuracy) / 100.0
+      weight = np.log((1 - training_error)/training_error)
+      return probabilities, weight
+  else:
+      return probabilities
 
-def generic_model_fitter(opt, X_train, y_train, X_test, y_test):
+def generic_model_fitter(ml_idx, X_train, y_train, X_test, y_test, algo_opts=None):
   """ Takes a generic ML model and fits it with the data,
   can be used for unit testing. """
-  ml = mls[opt]
+  ml = mls[ml_idx]
   ml.fit(X_train, y_train)
   X_tr = ml.transform(X_train)
-  X_te = ml.transform(X_test)
-  accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
-  return accuracy, y_pred
+
+  if algo_opts is "weighted":
+    # Measure training accuracy
+    accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_tr, y_train)
+    training_error = (100.0 - accuracy) / 100.0
+    weight = np.log((1 - training_error)/training_error)
+    return accuracy, y_pred, weight
+  else:
+    X_te = ml.transform(X_test)
+    accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
+    return accuracy, y_pred
 
 # Dict for reference
 str2func = {'soft': generic_model_fitter_prob,
             'hard': generic_model_fitter}
 
-def assemble_series(X_train, y_train, X_test, y_test, weights, algos, opt):
+def assemble_series(X_train, y_train, X_test, y_test, wts, algos, opt, algo_opts=None):
     """ Receives the training and test set samples and
     performs metric learning algorithms followed by a
     baseline ensemble classifier, using series techniques"""
@@ -64,6 +80,7 @@ def assemble_series(X_train, y_train, X_test, y_test, weights, algos, opt):
     num_classifiers = len(algos)
     num_samples = X_test.shape[0]
     num_centroids = len(np.unique(y_train))
+    weights = np.zeros(num_classifiers)
 
     if opt is "soft":
         probabilities = np.zeros((num_samples, num_centroids, num_classifiers))
@@ -75,17 +92,34 @@ def assemble_series(X_train, y_train, X_test, y_test, weights, algos, opt):
         # Call one by one and append pred and acc for hard
         # and proba for soft.
         if opt is "soft":
-            probabilities[:,:,idx] = generic_model_fitter_prob(mls[algo], \
+            if algo_opts is "weighted":
+                probabilities[:,:,idx],  weights[idx] = generic_model_fitter_prob(mls[algo], \
+                    X_train, y_train, X_test, y_test, "weighted")
+            else:
+                probabilities[:,:,idx] = generic_model_fitter_prob(mls[algo], \
                     X_train, y_train, X_test, y_test)
+
+            
         else:
-            accuracies[idx], all_predictions[idx,:] = generic_model_fitter(algo, \
+            if algo_opts is "weighted":
+                accuracies[idx], all_predictions[idx,:], weights[idx] = generic_model_fitter(algo, \
+                    X_train, y_train, X_test, y_test, "weighted")
+            else:
+                accuracies[idx], all_predictions[idx,:] = generic_model_fitter(algo, \
                     X_train, y_train, X_test, y_test)
             print accuracies[idx]
 
+    if algo_opts is "weighted":
+        wts = np.array(weights)
+        wts = wts / np.linalg.norm(wts)
+    else:
+        wts = np.ones(num_classifiers)
     # Start ensemble work.
     if opt is "soft":
         # Do necessary action
-        avg = np.average(probabilities, axis=2, weights=weights)
+        print "I was here"
+        print "Weights are ", wts
+        avg = np.average(probabilities, axis=2, weights=wts)
         y_pred = np.argmax(avg, axis=1)
         c = np.sum(y_pred == y_test)
         accuracy = c*100.0/len(y_test)
@@ -94,6 +128,8 @@ def assemble_series(X_train, y_train, X_test, y_test, weights, algos, opt):
     else:
         # Do necessary action
         # Across every sample, take a majority of the votes
+        # For now, we are not considering weights for Hard Voting, however,
+        # in the future, we can use a similar probability matrix for implementing the same.
         all_predictions = np.array(all_predictions, dtype=np.int32)
         majority_pred = np.zeros(num_samples)
         for sample in xrange(all_predictions.shape[1]):

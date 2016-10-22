@@ -1,4 +1,6 @@
 import numpy as np
+import scipy.io
+import subprocess
 import pdb, os, scipy
 import cv2
 import logging
@@ -11,6 +13,9 @@ from metric_learn import ITML_Supervised, SDML_Supervised, LSML_Supervised
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 import operator
 from threading import Thread
+from metric_learn import NCA as NCA_ml
+from metric_learn import RCA as RCA_ml
+from metric_learn import LFDA as LFDA_ml
 
 logging.basicConfig(filename="logs", level=logging.DEBUG)
 
@@ -323,7 +328,7 @@ class LSML:
 
 class RCA:
     def __init__(self):
-        self.metric_model = SDML_Supervised(num_constraints=200)
+        self.metric_model = RCA_ml()
         self.X_tr = None
         self.y_train = None
         self.X_te = None
@@ -352,7 +357,7 @@ class RCA:
 
 class NCA:
     def __init__(self):
-        self.metric_model = SDML_Supervised(num_constraints=200)
+        self.metric_model = NCA_ml()
         self.X_tr = None
         self.y_train = None
         self.X_te = None
@@ -424,14 +429,16 @@ class LDML:
             which calls ldml_learn and read the written matrix back. 
             3. Returns the X_tr transformed matrix. """
         self.X_tr = X_tr
-        self.y_train = y_train
-        np.savetxt('X_tr.mat', X_tr)
-        np.savetxt('y_train.mat', y_train)
+        self.y_train = [label+1 for label in y_train]
+        # TODO: Try CSV
+        np.savetxt('X_tr.csv', self.X_tr, delimiter=',')
+        np.savetxt('y_train.csv', self.y_train, delimiter=',')
 
-        os.system('matlab -nodesktop < ldml_wrap_learn.m')
+        os.system('matlab -nodisplay < ldml_wrap_learn.m')
+        print "Matlab successfully exited."
 
         # Read the transformation back and store it into self.L
-        self.L = scipy.io.loadmat("L.mat")
+        self.L = np.genfromtxt('L.csv', delimiter=',')
 
     def transform(self, y):
         if y is None:
@@ -452,6 +459,36 @@ class LDML:
             probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities
 
+class LFDA:
+    def __init__(self):
+        """Initializes the LFDA model"""
+        self.metric_model = LFDA_ml()
+        self.X_tr = None
+        self.y_train = None
+        self.X_te = None
+
+    def fit(self, X_tr, y_train):
+        """Fits the model to the prescribed data."""
+        self.X_tr = X_tr
+        self.y_train = y_train
+        return self.metric_model.fit(X_tr, y_train)
+
+    def transform(self, X):
+        """Transforms the test data according to the model"""
+        return self.metric_model.transform(X)
+
+    def predict_proba(self, X_te):
+        """Predicts the probabilities of each of the test samples"""
+        test_samples = X_te.shape[0]
+        self.X_tr = self.transform(self.X_tr)
+        clf = NearestCentroid()
+        clf.fit(self.X_tr, self.y_train)
+        centroids = clf.centroids_
+        probabilities = np.zeros((test_samples, centroids.shape[0]))
+        for sample in xrange(test_samples):
+            probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
+        return probabilities
+  
 class MLThread(Thread):
     def __init__(self, group=None, target=None, name=None,
                  args=(), kwargs={}, Verbose=None):

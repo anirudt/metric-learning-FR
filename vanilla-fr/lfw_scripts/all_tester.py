@@ -42,12 +42,11 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.decomposition import RandomizedPCA
 from sklearn.svm import SVC
-from ensembler import generic_model_fitter, assemble_parallel, assemble_series
+from ensembler import generic_model_fitter, assemble_parallel, assemble_series, list_mls
 
-
-def main(opt):
+def main(opt, runall=False):
     """ Pass either only_ml, ml_svm, or only_svm"""
-    print(__doc__)
+    #print(__doc__)
 
     # Display progress logs on stdout
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
@@ -104,12 +103,24 @@ def main(opt):
     print("done in %0.3fs" % (time() - t0))
 
     if opt is "serial":
-        a = time()
-        acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1], ['lmnn', 'lsml'], 'hard')
-        print("accuracy = %s",acc)
-        pdb.set_trace()
-        print(classification_report(y_test, y_pred, target_names=target_names))
-        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+        if not runall:
+            a = time()
+            acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1], ['ldml'], 'hard')
+            print("accuracy = %s",acc)
+            print(classification_report(y_test, y_pred, target_names=target_names))
+            print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+            b = time()
+
+        else:
+            mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda'])
+            for ml in mls:
+                if len(ml) == 0:
+                    continue
+                print(ml)
+                acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1], ml, 'hard')
+                print("accuracy = %s",acc)
+                print(classification_report(y_test, y_pred, target_names=target_names))
+                print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
 
         """ Opt for the serialized Implementation

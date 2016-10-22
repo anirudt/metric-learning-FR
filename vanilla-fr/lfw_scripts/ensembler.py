@@ -1,18 +1,20 @@
 #!/usr/bin/python
-from classifier import LMNN, ITML, LSML, SDML, MLThread
-from metric_learn import NCA
+from classifier import LMNN, ITML, LSML, SDML, MLThread, RCA, NCA, LFDA, LDML
 from threading import Thread
 import classifier
 import numpy as np
 import pdb
+import itertools
 
 mls = {
     'lmnn': LMNN(),
     'itml': ITML(),
     'lsml': LSML(),
     'sdml': SDML(),
-    #'nca': NCA(),
-    #'rca': RCA()
+    'ldml': LDML(),
+    'nca': NCA(),
+    'rca': RCA(),
+    'lfda': LFDA()
     }
 
 """
@@ -23,6 +25,14 @@ and then feeds it further into an Ensemble classifier.
 For the kNN-like probabilities, we use a modified Softmax 
 for determining them.
 """
+
+# Helper for generating all subsets of a list as a set.
+def list_mls(arr):
+    combs = []
+    for i in xrange(len(arr)+1):
+        listing = [list(x) for x in itertools.combinations(arr, i)]
+        combs.extend(listing)
+    return combs
 
 
 def generic_model_fitter_prob(ml, X_train, y_train, X_test, y_test):
@@ -36,7 +46,8 @@ def generic_model_fitter(opt, X_train, y_train, X_test, y_test):
   """ Takes a generic ML model and fits it with the data,
   can be used for unit testing. """
   ml = mls[opt]
-  X_tr = ml.fit(X_train, y_train).transform(X_train)
+  ml.fit(X_train, y_train)
+  X_tr = ml.transform(X_train)
   X_te = ml.transform(X_test)
   accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
   return accuracy, y_pred
@@ -127,18 +138,20 @@ def assemble_parallel(X_train, y_train, X_test, y_test, weights, opt):
     return accuracy, y_pred
   
   else:
-    accuracies =  np.zeros((num_classifiers, 1))
+    accuracies =  np.zeros(num_classifiers)
     predictions = np.zeros((num_classifiers, num_samples))
     for idx, _ in enumerate(mls):
       accuracies[idx], predictions[idx, :] = threads[idx].join()
 
-    majority_pred = np.zeros((num_samples, 1))
+    majority_pred = np.zeros(num_samples)
     # Run a voting classifier here on predictions.
     for sample in xrange(predictions.shape[1]):
       majority_pred[sample] = np.bincount(predictions[:, sample]).argmax()
       
       # TODO: implement a confidence score with respect to each vote count.
 
+    majority_pred = majority_pred.T
+    majority_pred = np.array(majority_pred, dtype=np.int32)
     c = np.sum(majority_pred == y_test)
     accuracy = c * 100.0 / num_samples
     return accuracy, majority_pred

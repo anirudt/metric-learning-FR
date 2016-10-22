@@ -5,9 +5,12 @@ clear all;
 addpath /home/anirudt/Projects/FR-research/vanilla-fr/lfw_scripts/mildml_files/
 
 % Add the ldml_learn wrapper
-X_tr = load('X_tr.mat');
-y_train = load('y_train.mat');
+X_tr = csvread('X_tr.csv');
+y_train = csvread('y_train.csv');
+size(X_tr)
+size(y_train)
 
-[L b info] = ldml_learn(X_tr, y_train, 3, 1000);
+[L b info] = ldml_learn(X_tr, y_train);
 
-save('L.mat', L);
+% Write back the transform for use in Python side
+csvwrite('L.csv', L');

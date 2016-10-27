@@ -119,6 +119,7 @@ def main(opt, runall=False):
 
         else:
             mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
+            ml_strs = []
             accuracies = []
             for ml in mls:
                 if len(ml) == 0:
@@ -126,6 +127,7 @@ def main(opt, runall=False):
                 print(ml)
                 acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ml, 'soft', 'weighted')
                 accuracies.append(acc)
+                ml_strs.append(getStr(ml))
                 print("accuracy = %s",acc)
                 print(classification_report(y_test, y_pred, target_names=target_names))
                 print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
@@ -220,13 +222,13 @@ def main(opt, runall=False):
 def run_many_epochs(num_epochs):
     accuracies = []
     for i in xrange(num_epochs):
-        headers, acc = main('parallel', runall=True)
+        headers, acc = main('serial', runall=True)
         accuracies.append(acc)
         cleanCachedMls()
     accuracies = np.array(accuracies)
-    np.savetxt('logs/results_'+str(num_epochs)+'parallel.csv', accuracies, delimiter=',', header=headers)
+    np.savetxt('logs/results_'+str(num_epochs)+'serial.csv', accuracies, delimiter=',', header=headers)
 
 
 if __name__ == "__main__":
     #main("series", runall=True)
-    run_many_epochs(10)
+    run_many_epochs(20)

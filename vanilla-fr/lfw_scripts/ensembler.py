@@ -17,12 +17,44 @@ mls = {
     'lfda': LFDA()
     }
 
-learned_mls = {
+learned_hard_ypreds = {
         'lmnn': None,
         'lsml': None,
         'ldml': None,
         'rca': None,
         'lfda': None
+        }
+
+learned_hard_acc = {
+        'lmnn': None,
+        'lsml': None,
+        'ldml': None,
+        'rca': None,
+        'lfda': None
+        }
+
+learned_hard_wts = {
+        'lmnn': None,
+        'lsml': None,
+        'ldml': None,
+        'rca': None,
+        'lfda': None
+        }
+
+learned_soft_prob = {
+        'lmnn': None,
+        'lsml': None,
+        'ldml': None,
+        'lfda': None,
+        'rca': None
+        }
+
+learned_soft_wts = {
+        'lmnn': None,
+        'lsml': None,
+        'ldml': None,
+        'lfda': None,
+        'rca': None
         }
 
 """
@@ -36,9 +68,13 @@ for determining them.
 
 def cleanCachedMls():
   # Iterate tthrough all keys of learned_mls and clear cache
-  global learned_mls
-  for key in learned_mls.keys():
-    learned_mls[key] = None
+  for key in learned_soft_prob.keys():
+      learned_soft_prob[key] = None
+      learned_soft_wts[key] = None
+      learned_hard_ypreds[key] = None
+      learned_hard_acc[key] = None
+      learned_hard_wts[key] = None
+
 
 # Helper for generating all subsets of a list as a set.
 def list_mls(arr):
@@ -51,14 +87,24 @@ def list_mls(arr):
 
 def generic_model_fitter_prob(ml_str, X_train, y_train, X_test, y_test, algo_opts=None):
   """ Takes a generic ML model and fits it with the data,
-  can be used for system testing. """
-  global learned_mls
+  can be used for system testing."""
+  """
   if learned_mls[ml_str] is not None:
       ml = learned_mls[ml_str]
+      pdb.set_trace()
+      print "Hello", ml
   else:
       ml = mls[ml_str]
       ml.fit(X_train, y_train)
       learned_mls[ml_str] = ml
+  """
+  if learned_soft_prob[ml_str] is not None:
+      if algo_opts is "weighted":
+          return learned_soft_prob[ml_str], learned_soft_wts[ml_str]
+      else:
+          return learned_soft_prob[ml_str]
+  ml = mls[ml_str]
+  ml.fit(X_train, y_train)
   X_tr = ml.transform(X_train)
   X_te = ml.transform(X_test)
   probabilities = ml.predict_proba(X_te)
@@ -67,19 +113,24 @@ def generic_model_fitter_prob(ml_str, X_train, y_train, X_test, y_test, algo_opt
       accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_tr, y_train)
       training_error = (100.0 - accuracy) / 100.0
       weight = np.log((1 - training_error)/training_error)
+      learned_soft_prob[ml_str] = probabilities
+      learned_soft_wts[ml_str] = weight
       return probabilities, weight
   else:
+      learned_soft_prob[ml_str] = probabilities
       return probabilities
 
 def generic_model_fitter(ml_str, X_train, y_train, X_test, y_test, algo_opts=None):
   """ Takes a generic ML model and fits it with the data,
-  can be used for unit testing. """
-  if learned_mls[ml_str] is not None:
-      ml = learned_mls[ml_str]
-  else:
-      ml = mls[ml_str]
-      ml.fit(X_train, y_train)
-      learned_mls[ml_str] = ml
+  can be used for unit testing."""
+  if learned_hard_ypreds[ml_str] is not None:
+      if algo_opts is "weighted":
+          return learned_hard_acc[ml_str], learned_hard_ypreds[ml_str], learned_hard_wts[ml_str]
+      else:
+          return learned_hard_acc[ml_str], learned_hard_ypreds[ml_str]
+
+  ml = mls[ml_str]
+  ml.fit(X_train, y_train)
   X_tr = ml.transform(X_train)
 
   if algo_opts is "weighted":
@@ -89,10 +140,12 @@ def generic_model_fitter(ml_str, X_train, y_train, X_test, y_test, algo_opts=Non
     weight = np.log((1 - training_error)/training_error)
     X_te = ml.transform(X_test)
     accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
+    learned_hard_acc[ml_str], learned_hard_ypreds[ml_str], learned_hard_wts[ml_str] = accuracy, y_pred, weight
     return accuracy, y_pred, weight
   else:
     X_te = ml.transform(X_test)
     accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
+    learned_hard_ypreds[ml_str], learned_hard_acc[ml_str] = y_pred, accuracy
     return accuracy, y_pred
 
 # Dict for reference
@@ -120,15 +173,19 @@ def assemble_series(X_train, y_train, X_test, y_test, algos, opt, algo_opts=None
         # and proba for soft.
         if opt is "soft":
             if algo_opts is "weighted":
-                probabilities[:,:,idx],  weights[idx] = generic_model_fitter_prob(mls[algo], \
+                print algo, algos
+                #pdb.set_trace()
+                probabilities[:,:,idx],  weights[idx] = generic_model_fitter_prob(algo, \
                     X_train, y_train, X_test, y_test, "weighted")
             else:
-                probabilities[:,:,idx] = generic_model_fitter_prob(mls[algo], \
+                probabilities[:,:,idx] = generic_model_fitter_prob(algo, \
                     X_train, y_train, X_test, y_test)
 
             
         else:
             if algo_opts is "weighted":
+                print algo, algos
+                #pdb.set_trace()
                 accuracies[idx], all_predictions[idx,:], weights[idx] = generic_model_fitter(algo, \
                     X_train, y_train, X_test, y_test, "weighted")
             else:

@@ -5,6 +5,10 @@ This is a Face Recognition learning repo for research.
 - [ ] Conduct parameter tuning.
 - [ ] Log the params for the algorithms.
 
+
+## Observations:
+- Caching working for all cases, Yay!
+
 ## Work Done:
 - [X] Conduct an ensemble classifier on all of the metric learning based techniques.
   Partly done, though hard voting is also required to be implemented.
@@ -20,6 +24,7 @@ the `get_distance()` API given by Shogun.
   Edit: Doing this inside the classful implementation itself.
 - [X] Managed to get LDML, LFDA, LMNN, LSML, RCA working with good accuracies.
 - [ ] Extensive testing support to be added.
+- [ ] Investigation required!
 
 ## Working Algorithms:
 - ITML

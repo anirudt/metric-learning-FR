@@ -1,0 +1,21 @@
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2012 The MathWorks, Inc.
+                    R2012a (7.14.0.739) 32-bit (glnx86)
+                              February 9, 2012
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> >> >> >> >> >> >> >> >> >> 
+ans =
+
+   966   150
+
+>> 
+ans =
+
+   966     1
+
+>> >> >> >> >> >> 

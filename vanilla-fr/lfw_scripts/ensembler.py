@@ -8,14 +8,22 @@ import itertools
 
 mls = {
     'lmnn': LMNN(),
-    'itml': ITML(),
+    #'itml': ITML(),
     'lsml': LSML(),
-    'sdml': SDML(),
+    #'sdml': SDML(),
     'ldml': LDML(),
-    'nca': NCA(),
+    #'nca': NCA(),
     'rca': RCA(),
     'lfda': LFDA()
     }
+
+learned_mls = {
+        'lmnn': None,
+        'lsml': None,
+        'ldml': None,
+        'rca': None,
+        'lfda': None
+        }
 
 """
 This file accepts the split and whitened data from the 
@@ -26,6 +34,12 @@ For the kNN-like probabilities, we use a modified Softmax
 for determining them.
 """
 
+def cleanCachedMls():
+  # Iterate tthrough all keys of learned_mls and clear cache
+  global learned_mls
+  for key in learned_mls.keys():
+    learned_mls[key] = None
+
 # Helper for generating all subsets of a list as a set.
 def list_mls(arr):
     combs = []
@@ -35,10 +49,17 @@ def list_mls(arr):
     return combs
 
 
-def generic_model_fitter_prob(ml, X_train, y_train, X_test, y_test, algo_opts=None):
+def generic_model_fitter_prob(ml_str, X_train, y_train, X_test, y_test, algo_opts=None):
   """ Takes a generic ML model and fits it with the data,
   can be used for system testing. """
-  ml.fit(X_train, y_train)
+  global learned_mls
+  if learned_mls[ml_str] is not None:
+      ml = learned_mls[ml_str]
+  else:
+      ml = mls[ml_str]
+      ml.fit(X_train, y_train)
+      learned_mls[ml_str] = ml
+  X_tr = ml.transform(X_train)
   X_te = ml.transform(X_test)
   probabilities = ml.predict_proba(X_te)
   if algo_opts is "weighted":
@@ -50,11 +71,15 @@ def generic_model_fitter_prob(ml, X_train, y_train, X_test, y_test, algo_opts=No
   else:
       return probabilities
 
-def generic_model_fitter(ml_idx, X_train, y_train, X_test, y_test, algo_opts=None):
+def generic_model_fitter(ml_str, X_train, y_train, X_test, y_test, algo_opts=None):
   """ Takes a generic ML model and fits it with the data,
   can be used for unit testing. """
-  ml = mls[ml_idx]
-  ml.fit(X_train, y_train)
+  if learned_mls[ml_str] is not None:
+      ml = learned_mls[ml_str]
+  else:
+      ml = mls[ml_str]
+      ml.fit(X_train, y_train)
+      learned_mls[ml_str] = ml
   X_tr = ml.transform(X_train)
 
   if algo_opts is "weighted":
@@ -62,6 +87,8 @@ def generic_model_fitter(ml_idx, X_train, y_train, X_test, y_test, algo_opts=Non
     accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_tr, y_train)
     training_error = (100.0 - accuracy) / 100.0
     weight = np.log((1 - training_error)/training_error)
+    X_te = ml.transform(X_test)
+    accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
     return accuracy, y_pred, weight
   else:
     X_te = ml.transform(X_test)
@@ -72,7 +99,7 @@ def generic_model_fitter(ml_idx, X_train, y_train, X_test, y_test, algo_opts=Non
 str2func = {'soft': generic_model_fitter_prob,
             'hard': generic_model_fitter}
 
-def assemble_series(X_train, y_train, X_test, y_test, wts, algos, opt, algo_opts=None):
+def assemble_series(X_train, y_train, X_test, y_test, algos, opt, algo_opts=None):
     """ Receives the training and test set samples and
     performs metric learning algorithms followed by a
     baseline ensemble classifier, using series techniques"""
@@ -142,7 +169,7 @@ def assemble_series(X_train, y_train, X_test, y_test, wts, algos, opt, algo_opts
         print accuracy, majority_pred
         return accuracy, majority_pred
 
-def assemble_parallel(X_train, y_train, X_test, y_test, weights, opt):
+def assemble_parallel(X_train, y_train, X_test, y_test, opt, algo_opts=None):
   """ Receives the training and test set samples and
   performs metric learning algorithms followed by a
   baseline ensemble classifier using parallel techniques. """
@@ -155,16 +182,24 @@ def assemble_parallel(X_train, y_train, X_test, y_test, weights, opt):
   num_centroids = len(np.unique(y_train))
 
   for idx, key in enumerate(mls):
-    ml = mls[key]
-    threads[idx] = MLThread(target=str2func[opt],args=(ml, X_train, y_train, X_test, y_test))
+    threads[idx] = MLThread(target=str2func[opt],args=(key, X_train, y_train, X_test, y_test, algo_opts))
     threads[idx].start()
 
   # Step 2: Combine all of them and use a baseline ensemble classifier
   if opt is "soft":
     probabilities = np.zeros((num_samples, num_centroids, num_classifiers))
     for idx, _ in enumerate(mls):
-      probabilities[:,:,idx] = threads[idx].join()
+      tmp = threads[idx].join() 
+      if algo_opts is "weighted":
+          weights[idx] = tmp[1]
+          probabilities[:,:,idx] = tmp[0]
+      else:
+          probabilities[:,:,idx] = tmp
+      
 
+    
+    if not algo_opts:
+         weights = np.ones(num_classifiers)
     avg = np.average(probabilities, axis=2, weights=weights)
 
     # Get the classifier
@@ -179,13 +214,12 @@ def assemble_parallel(X_train, y_train, X_test, y_test, weights, opt):
     for idx, _ in enumerate(mls):
       accuracies[idx], predictions[idx, :] = threads[idx].join()
 
+    predictions = np.array(predictions, dtype=np.int32)
     majority_pred = np.zeros(num_samples)
     # Run a voting classifier here on predictions.
     for sample in xrange(predictions.shape[1]):
       majority_pred[sample] = np.bincount(predictions[:, sample]).argmax()
       
-      # TODO: implement a confidence score with respect to each vote count.
-
     majority_pred = majority_pred.T
     majority_pred = np.array(majority_pred, dtype=np.int32)
     c = np.sum(majority_pred == y_test)

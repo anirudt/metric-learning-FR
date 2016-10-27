@@ -42,7 +42,13 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.decomposition import RandomizedPCA
 from sklearn.svm import SVC
-from ensembler import generic_model_fitter, assemble_parallel, assemble_series, list_mls
+from ensembler import generic_model_fitter, assemble_parallel, assemble_series, list_mls, cleanCachedMls
+import numpy as np
+
+# Helper Function
+def getStr(arr):
+    return ' '.join(arr)
+
 
 def main(opt, runall=False):
     """ Pass either only_ml, ml_svm, or only_svm"""
@@ -105,7 +111,7 @@ def main(opt, runall=False):
     if opt is "serial":
         if not runall:
             a = time()
-            acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1,1,1,1], ['lmnn', 'lsml', 'ldml', 'rca', 'lfda'], 'soft', "weighted")
+            acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ['lmnn', 'lsml', 'rca', 'ldml', 'lfda'], 'soft', "weighted")
             print("accuracy = %s",acc)
             print(classification_report(y_test, y_pred, target_names=target_names))
             print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
@@ -113,11 +119,13 @@ def main(opt, runall=False):
 
         else:
             mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
+            accuracies = []
             for ml in mls:
                 if len(ml) == 0:
                     continue
                 print(ml)
-                acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, [1,1,1,1,1], ml, 'hard')
+                acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ml, 'soft', 'weighted')
+                accuracies.append(acc)
                 print("accuracy = %s",acc)
                 print(classification_report(y_test, y_pred, target_names=target_names))
                 print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
@@ -150,14 +158,31 @@ def main(opt, runall=False):
         print("Total time taken for all this: {0}".format(b-a))
         """
     else:
-        """TODO:  Opt for the parallel thread implementation. """
-        a = time()
-        acc, y_pred = assemble_parallel(X_train_pca, y_train, X_test_pca, y_test, [1,1], 'soft')
-        print("accuracy = %s",acc)
-        print(classification_report(y_test, y_pred, target_names=target_names))
-        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
-        b = time()
-        print("Total time taken for all this: {0}".format(b-a))
+        """ TODO:  Opt for the parallel thread implementation. """
+        if not runall:
+            a = time()
+            acc, y_pred = assemble_parallel(X_train_pca, y_train, X_test_pca, y_test, 'hard')
+            print("accuracy = %s",acc)
+            print(classification_report(y_test, y_pred, target_names=target_names))
+            print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+            b = time()
+            print("Total time taken for all this: {0}".format(b-a))
+
+        else:
+            mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
+            ml_strs = []
+            accuracies = []
+            for ml in mls:
+                if len(ml) == 0:
+                    continue
+                print(ml)
+                acc, y_pred = assemble_parallel(X_train_pca, y_train, X_test_pca, y_test, 'hard')
+                accuracies.append(acc)
+                ml_strs.append(getStr(ml))
+                print("accuracy = %s", acc)
+                print(classification_report(y_test, y_pred, target_names=target_names))
+                print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+
     ###############################################################################
     print("Without the LMNN structure")
     # Train a SVM classification model
@@ -185,5 +210,23 @@ def main(opt, runall=False):
     print(classification_report(y_test, y_pred, target_names=target_names))
     print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
+    if runall:
+        accuracies.append(acc)
+        ml_strs.append('svm')
+        ml_strs = ", ".join(ml_strs)
+        return ml_strs, accuracies
+
+
+def run_many_epochs(num_epochs):
+    accuracies = []
+    for i in xrange(num_epochs):
+        headers, acc = main('parallel', runall=True)
+        accuracies.append(acc)
+        cleanCachedMls()
+    accuracies = np.array(accuracies)
+    np.savetxt('logs/results_'+str(num_epochs)+'parallel.csv', accuracies, delimiter=',', header=headers)
+
+
 if __name__ == "__main__":
-    main("serial", runall=True)
+    #main("series", runall=True)
+    run_many_epochs(10)

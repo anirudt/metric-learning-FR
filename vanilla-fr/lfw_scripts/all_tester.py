@@ -231,4 +231,4 @@ def run_many_epochs(num_epochs):
 
 if __name__ == "__main__":
     #main("series", runall=True)
-    run_many_epochs(20)
+    run_many_epochs(50)

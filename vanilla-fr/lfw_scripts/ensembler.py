@@ -88,16 +88,6 @@ def list_mls(arr):
 def generic_model_fitter_prob(ml_str, X_train, y_train, X_test, y_test, algo_opts=None):
   """ Takes a generic ML model and fits it with the data,
   can be used for system testing."""
-  """
-  if learned_mls[ml_str] is not None:
-      ml = learned_mls[ml_str]
-      pdb.set_trace()
-      print "Hello", ml
-  else:
-      ml = mls[ml_str]
-      ml.fit(X_train, y_train)
-      learned_mls[ml_str] = ml
-  """
   if learned_soft_prob[ml_str] is not None:
       if algo_opts is "weighted":
           return learned_soft_prob[ml_str], learned_soft_wts[ml_str]

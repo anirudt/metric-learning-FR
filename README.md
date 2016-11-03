@@ -23,8 +23,7 @@ the `get_distance()` API given by Shogun.
 - [X] Mangle the data in the format required by the metric-learn module and feed it for results.
   Edit: Doing this inside the classful implementation itself.
 - [X] Managed to get LDML, LFDA, LMNN, LSML, RCA working with good accuracies.
-- [ ] Extensive testing support to be added.
-- [ ] Investigation required!
+- [ ] Try out Gabor Features, to try to analyse the use of metric learning algorithms in that space. 
 
 ## Working Algorithms:
 - ITML

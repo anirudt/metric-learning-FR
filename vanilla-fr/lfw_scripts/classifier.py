@@ -488,6 +488,16 @@ class LFDA:
         for sample in xrange(test_samples):
             probabilities[sample] = sk_nearest_neighbour_proba(centroids, X_te[sample, :])
         return probabilities
+
+class GaborFeatures:
+    def __init__(self):
+        """ Initializes the Gabor Feature Transformer """
+
+    def fit(self, X_tr, y_train):
+        """ Fits a Gabor Feature Transform """
+
+    def transform(self, X):
+        """ Transforms according to a learnt transformer """
   
 class MLThread(Thread):
     def __init__(self, group=None, target=None, name=None,

@@ -121,16 +121,29 @@ def main(opt, runall=False):
             mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
             ml_strs = []
             accuracies = []
+            y_preds = []
             for ml in mls:
                 if len(ml) == 0:
                     continue
                 print(ml)
-                acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ml, 'soft', 'weighted')
+                acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ml, 'soft', 'unweighted')
+                y_preds.append(y_pred)
                 accuracies.append(acc)
                 ml_strs.append(getStr(ml))
                 print("accuracy = %s",acc)
                 print(classification_report(y_test, y_pred, target_names=target_names))
                 print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+            y_preds = np.array(y_preds)
+            num_samples = y_preds.shape[1]
+            majority_pred = np.zeros(num_samples)
+            
+            for sample in xrange(y_preds.shape[1]):
+                majority_pred[sample] = np.bincount(y_preds[:,sample]).argmax()
+            majority_pred= np.array(majority_pred, dtype=np.int32)
+            c = np.sum(majority_pred == y_test)
+            accuracy = c * 100.0 / num_samples
+            accuracies.append(accuracy)
+            ml_strs.append('all')
 
 
         """ Opt for the serialized Implementation
@@ -173,6 +186,7 @@ def main(opt, runall=False):
         else:
             mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
             ml_strs = []
+            y_preds = []
             accuracies = []
             for ml in mls:
                 if len(ml) == 0:
@@ -180,10 +194,24 @@ def main(opt, runall=False):
                 print(ml)
                 acc, y_pred = assemble_parallel(X_train_pca, y_train, X_test_pca, y_test, 'hard')
                 accuracies.append(acc)
+                y_preds.append(y_pred)
                 ml_strs.append(getStr(ml))
                 print("accuracy = %s", acc)
                 print(classification_report(y_test, y_pred, target_names=target_names))
                 print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+
+            y_preds = np.array(y_preds)
+            num_samples = y_preds.shape[1]
+            majority_pred = np.zeros(num_samples)
+            
+            for sample in xrange(y_preds.shape[1]):
+                majority_pred[sample] = np.bincount(y_preds[:,sample]).argmax()
+            majority_pred= np.array(majority_pred, dtype=np.int32)
+            c = np.sum(majority_pred == y_test)
+            accuracy = c * 100.0 / num_samples
+            accuracies.append(accuracy)
+            ml_strs.append('all')
+
 
     ###############################################################################
     print("Without the LMNN structure")
@@ -226,9 +254,9 @@ def run_many_epochs(num_epochs):
         accuracies.append(acc)
         cleanCachedMls()
     accuracies = np.array(accuracies)
-    np.savetxt('logs/results_'+str(num_epochs)+'serial.csv', accuracies, delimiter=',', header=headers)
+    np.savetxt('logs/results_'+str(num_epochs)+'serial_unweighted.csv', accuracies, delimiter=',', header=headers)
 
 
 if __name__ == "__main__":
     #main("series", runall=True)
-    run_many_epochs(50)
+    run_many_epochs(20)

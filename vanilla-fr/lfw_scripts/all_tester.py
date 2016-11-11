@@ -35,6 +35,7 @@ import matplotlib.pyplot as plt
 
 import pdb
 import classifier
+from sklearn.lda import LDA
 from sklearn.cross_validation import train_test_split
 from sklearn.datasets import fetch_lfw_people
 from sklearn.grid_search import GridSearchCV
@@ -50,8 +51,16 @@ def getStr(arr):
     return ' '.join(arr)
 
 
-def main(opt, runall=False):
+def main(opt_list, arg_list, runall=False):
     """ Pass either only_ml, ml_svm, or only_svm"""
+    accuracies = {
+            'soft_unw': [],
+            'soft_wei': [],
+            'hard_wei': [],
+            'hard_unw': [],
+            'svm': 0,
+            'lda': 0
+            }
     #print(__doc__)
 
     # Display progress logs on stdout
@@ -108,7 +117,7 @@ def main(opt, runall=False):
     X_test_pca = pca.transform(X_test)
     print("done in %0.3fs" % (time() - t0))
 
-    if opt is "serial":
+    if opt_list is "serial":
         if not runall:
             a = time()
             acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ['lmnn', 'lsml', 'rca', 'ldml', 'lfda'], 'soft', "weighted")
@@ -118,61 +127,116 @@ def main(opt, runall=False):
             b = time()
 
         else:
-            mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
-            ml_strs = []
-            accuracies = []
-            y_preds = []
-            for ml in mls:
-                if len(ml) == 0:
-                    continue
-                print(ml)
-                acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ml, 'soft', 'unweighted')
-                y_preds.append(y_pred)
-                accuracies.append(acc)
-                ml_strs.append(getStr(ml))
-                print("accuracy = %s",acc)
-                print(classification_report(y_test, y_pred, target_names=target_names))
-                print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
-            y_preds = np.array(y_preds)
-            num_samples = y_preds.shape[1]
-            majority_pred = np.zeros(num_samples)
-            
-            for sample in xrange(y_preds.shape[1]):
-                majority_pred[sample] = np.bincount(y_preds[:,sample]).argmax()
-            majority_pred= np.array(majority_pred, dtype=np.int32)
-            c = np.sum(majority_pred == y_test)
-            accuracy = c * 100.0 / num_samples
-            accuracies.append(accuracy)
-            ml_strs.append('all')
+            if 'soft_unw' in arg_list:
+                mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
+                ml_strs = []
+                y_preds = []
+                for ml in mls:
+                    if len(ml) == 0:
+                        continue
+                    print(ml)
+                    acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ml, 'soft', 'unweighted')
+                    y_preds.append(y_pred)
+                    accuracies['soft_unw'].append(acc)
+                    ml_strs.append(getStr(ml))
+                    print("accuracy = %s",acc)
+                    print(classification_report(y_test, y_pred, target_names=target_names))
+                    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+                y_preds = np.array(y_preds)
+                num_samples = y_preds.shape[1]
+                majority_pred = np.zeros(num_samples)
+                
+                for sample in xrange(y_preds.shape[1]):
+                    majority_pred[sample] = np.bincount(y_preds[:,sample]).argmax()
+                majority_pred= np.array(majority_pred, dtype=np.int32)
+                c = np.sum(majority_pred == y_test)
+                accuracy = c * 100.0 / num_samples
+                accuracies['soft_unw'].append(accuracy)
+                ml_strs.append('all')
+                cleanCachedMls()
+            if 'soft_wei' in arg_list:
+                mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
+                ml_strs = []
+                y_preds = []
+                for ml in mls:
+                    if len(ml) == 0:
+                        continue
+                    print(ml)
+                    acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ml, 'soft', 'weighted')
+                    y_preds.append(y_pred)
+                    accuracies['soft_wei'].append(acc)
+                    ml_strs.append(getStr(ml))
+                    print("accuracy = %s",acc)
+                    print(classification_report(y_test, y_pred, target_names=target_names))
+                    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+                y_preds = np.array(y_preds)
+                num_samples = y_preds.shape[1]
+                majority_pred = np.zeros(num_samples)
+                
+                for sample in xrange(y_preds.shape[1]):
+                    majority_pred[sample] = np.bincount(y_preds[:,sample]).argmax()
+                majority_pred= np.array(majority_pred, dtype=np.int32)
+                c = np.sum(majority_pred == y_test)
+                accuracy = c * 100.0 / num_samples
+                accuracies['soft_wei'].append(accuracy)
+                ml_strs.append('all')
 
-
-        """ Opt for the serialized Implementation
-        a = time()
-        print("Trying LMNN")
-        acc, y_pred = generic_model_fitter('lmnn', X_train_pca, y_train, X_test_pca, y_test)
-        print("accuracy = %s",acc)
-        print(classification_report(y_test, y_pred, target_names=target_names))
-        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
-
-
-        ###############################################################################
-        print("Trying LSML")
-        acc, y_pred = generic_model_fitter('lsml', X_train_pca, y_train, X_test_pca, y_test)
-        print("accuracy = %s",acc)
-        print(classification_report(y_test, y_pred, target_names=target_names))
-        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
-
-        ###############################################################################
-        print("Trying SDML")
-        acc, y_pred = generic_model_fitter('sdml', X_train_pca, y_train, X_test_pca, y_test)
-        print("accuracy = %s",acc)
-        print(classification_report(y_test, y_pred, target_names=target_names))
-        print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
-
-        b = time()
-        print("Total time taken for all this: {0}".format(b-a))
-        """
-    else:
+                cleanCachedMls()
+            if 'hard_wei' in arg_list:
+                mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
+                ml_strs = []
+                y_preds = []
+                for ml in mls:
+                    if len(ml) == 0:
+                        continue
+                    print(ml)
+                    acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ml, 'hard', 'weighted')
+                    y_preds.append(y_pred)
+                    accuracies['hard_wei'].append(acc)
+                    ml_strs.append(getStr(ml))
+                    print("accuracy = %s",acc)
+                    print(classification_report(y_test, y_pred, target_names=target_names))
+                    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+                y_preds = np.array(y_preds, dtype=np.int32)
+                num_samples = y_preds.shape[1]
+                majority_pred = np.zeros(num_samples)
+                
+                for sample in xrange(y_preds.shape[1]):
+                    majority_pred[sample] = np.bincount(y_preds[:,sample]).argmax()
+                majority_pred= np.array(majority_pred, dtype=np.int32)
+                c = np.sum(majority_pred == y_test)
+                accuracy = c * 100.0 / num_samples
+                accuracies['hard_wei'].append(accuracy)
+                ml_strs.append('all')
+                cleanCachedMls()
+            if 'hard_unw' in arg_list:
+                mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
+                ml_strs = []
+                y_preds = []
+                for ml in mls:
+                    if len(ml) == 0:
+                        continue
+                    print(ml)
+                    acc, y_pred = assemble_series(X_train_pca, y_train, X_test_pca, y_test, ml, 'hard', 'unweighted')
+                    y_preds.append(y_pred)
+                    accuracies['hard_unw'].append(acc)
+                    ml_strs.append(getStr(ml))
+                    print("accuracy = %s",acc)
+                    print(classification_report(y_test, y_pred, target_names=target_names))
+                    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+                y_preds = np.array(y_preds, dtype=np.int32)
+                num_samples = y_preds.shape[1]
+                majority_pred = np.zeros(num_samples)
+                
+                for sample in xrange(y_preds.shape[1]):
+                    majority_pred[sample] = np.bincount(y_preds[:,sample]).argmax()
+                majority_pred= np.array(majority_pred, dtype=np.int32)
+                c = np.sum(majority_pred == y_test)
+                accuracy = c * 100.0 / num_samples
+                accuracies['hard_unw'].append(accuracy)
+                ml_strs.append('all')
+                cleanCachedMls()
+    if opt_list is "parallel":
         """ TODO:  Opt for the parallel thread implementation. """
         if not runall:
             a = time()
@@ -187,13 +251,12 @@ def main(opt, runall=False):
             mls = list_mls(['lmnn', 'lsml', 'rca', 'lfda', 'ldml'])
             ml_strs = []
             y_preds = []
-            accuracies = []
             for ml in mls:
                 if len(ml) == 0:
                     continue
                 print(ml)
                 acc, y_pred = assemble_parallel(X_train_pca, y_train, X_test_pca, y_test, 'hard')
-                accuracies.append(acc)
+                accuracies['hard'].append(acc)
                 y_preds.append(y_pred)
                 ml_strs.append(getStr(ml))
                 print("accuracy = %s", acc)
@@ -209,7 +272,7 @@ def main(opt, runall=False):
             majority_pred= np.array(majority_pred, dtype=np.int32)
             c = np.sum(majority_pred == y_test)
             accuracy = c * 100.0 / num_samples
-            accuracies.append(accuracy)
+            accuracies['hard'].append(accuracy)
             ml_strs.append('all')
 
 
@@ -240,23 +303,64 @@ def main(opt, runall=False):
     print(classification_report(y_test, y_pred, target_names=target_names))
     print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
+    print("Fitting the classifier to the training set")
+    t0 = time()
+    clf = LDA()
+    clf.fit(X_train_pca, y_train)
+    print("done in %0.3fs" % (time() - t0))
+    print("Best estimator found by grid search:")
+
+    ###############################################################################
+    # Quantitative evaluation of the model quality on the test set
+
+    print("Predicting people's names on the test set")
+    t0 = time()
+    y_pred = clf.predict(X_test_pca)
+    acc1 = 100.0*sum(y_pred == y_test) / len(y_test)
+    print("accuracy = %s",acc1)
+    print("done in %0.3fs" % (time() - t0))
+
+    print(classification_report(y_test, y_pred, target_names=target_names))
+    print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
+
     if runall:
-        accuracies.append(acc)
+        accuracies['svm'] = acc
+        accuracies['lda'] = acc1
         ml_strs.append('svm')
+        ml_strs.append('lda')
         ml_strs = ", ".join(ml_strs)
         return ml_strs, accuracies
 
 
 def run_many_epochs(num_epochs):
-    accuracies = []
+    accuracies = {
+            'soft_unw': [],
+            'soft_wei': [],
+            'hard_wei': [],
+            'hard_unw': [],
+            'svm': [],
+            'lda': []
+            }
     for i in xrange(num_epochs):
-        headers, acc = main('serial', runall=True)
-        accuracies.append(acc)
+        headers, acc = main('serial', ['hard_wei', 'soft_wei', 'hard_unw', 'soft_unw'], runall=True)
+        if len(acc['soft_unw']) > 0:
+            accuracies['soft_unw'].append(acc['soft_unw'])
+        if len(acc['soft_wei']) > 0:
+            accuracies['soft_wei'].append(acc['soft_wei'])
+        if len(acc['hard_wei']) > 0:
+            accuracies['hard_wei'].append(acc['hard_wei'])
+        if len(acc['hard_unw']) > 0:
+            accuracies['hard_unw'].append(acc['hard_unw'])
+        accuracies['svm'].append(acc['svm'])
+        accuracies['lda'].append(acc['lda'])
         cleanCachedMls()
-    accuracies = np.array(accuracies)
-    np.savetxt('logs/results_'+str(num_epochs)+'serial_unweighted.csv', accuracies, delimiter=',', header=headers)
+
+    # Write all results.
+    for key in accuracies.keys():
+        arr = accuracies[key]
+        np.savetxt('logs/results_'+str(num_epochs)+'_'+key+'serial.csv', arr, delimiter=',', header=headers)
 
 
 if __name__ == "__main__":
     #main("series", runall=True)
-    run_many_epochs(20)
+    run_many_epochs(24)

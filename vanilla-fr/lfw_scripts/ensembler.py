@@ -1,6 +1,8 @@
 #!/usr/bin/python
 from classifier import LMNN, ITML, LSML, SDML, MLThread, RCA, NCA, LFDA, LDML
 from threading import Thread
+from sklearn.neural_network import MLPClassifier
+from sklearn import tree
 import classifier
 import numpy as np
 import pdb
@@ -34,6 +36,14 @@ learned_hard_acc = {
         }
 
 learned_hard_wts = {
+        'lmnn': None,
+        'lsml': None,
+        'ldml': None,
+        'rca': None,
+        'lfda': None
+        }
+
+learned_hard_train_ypreds = {
         'lmnn': None,
         'lsml': None,
         'ldml': None,
@@ -115,7 +125,7 @@ def generic_model_fitter(ml_str, X_train, y_train, X_test, y_test, algo_opts=Non
   can be used for unit testing."""
   if learned_hard_ypreds[ml_str] is not None:
       if algo_opts is "weighted":
-          return learned_hard_acc[ml_str], learned_hard_ypreds[ml_str], learned_hard_wts[ml_str]
+          return learned_hard_acc[ml_str], learned_hard_ypreds[ml_str], learned_hard_wts[ml_str], learned_hard_train_ypreds[ml_str]
       else:
           return learned_hard_acc[ml_str], learned_hard_ypreds[ml_str]
 
@@ -125,13 +135,13 @@ def generic_model_fitter(ml_str, X_train, y_train, X_test, y_test, algo_opts=Non
 
   if algo_opts is "weighted":
     # Measure training accuracy
-    accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_tr, y_train)
+    accuracy, train_y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_tr, y_train)
     training_error = (100.0 - accuracy) / 100.0
     weight = np.log((1 - training_error)/training_error)
     X_te = ml.transform(X_test)
     accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
-    learned_hard_acc[ml_str], learned_hard_ypreds[ml_str], learned_hard_wts[ml_str] = accuracy, y_pred, weight
-    return accuracy, y_pred, weight
+    learned_hard_acc[ml_str], learned_hard_ypreds[ml_str], learned_hard_wts[ml_str], learned_hard_train_ypreds[ml_str] = accuracy, y_pred, weight, train_y_pred
+    return accuracy, y_pred, weight, train_y_pred
   else:
     X_te = ml.transform(X_test)
     accuracy, y_pred = classifier.sk_nearest_neighbour(X_tr, y_train, X_te, y_test)
@@ -149,6 +159,7 @@ def assemble_series(X_train, y_train, X_test, y_test, algos, opt, algo_opts=None
 
     num_classifiers = len(algos)
     num_samples = X_test.shape[0]
+    num_train_samples = X_train.shape[0]
     num_centroids = len(np.unique(y_train))
     weights = np.zeros(num_classifiers)
 
@@ -156,6 +167,7 @@ def assemble_series(X_train, y_train, X_test, y_test, algos, opt, algo_opts=None
         probabilities = np.zeros((num_samples, num_centroids, num_classifiers))
     else:
         all_predictions = np.zeros((num_classifiers, num_samples))
+        train_predictions = np.zeros((num_classifiers, num_train_samples))
         accuracies = np.zeros((num_classifiers, 1))
         print 'Printing all accuracies'
     for idx, algo in enumerate(algos):
@@ -176,8 +188,13 @@ def assemble_series(X_train, y_train, X_test, y_test, algos, opt, algo_opts=None
             if algo_opts is "weighted":
                 print algo, algos
                 #pdb.set_trace()
-                accuracies[idx], all_predictions[idx,:], weights[idx] = generic_model_fitter(algo, \
+                tmp = generic_model_fitter(algo, \
                     X_train, y_train, X_test, y_test, "weighted")
+                if len(tmp) == 4:
+                    accuracies[idx], all_predictions[idx,:], weights[idx], train_predictions[idx, :] = tmp
+                else:
+                    pdb.set_trace()
+
             else:
                 accuracies[idx], all_predictions[idx,:] = generic_model_fitter(algo, \
                     X_train, y_train, X_test, y_test)
@@ -204,17 +221,42 @@ def assemble_series(X_train, y_train, X_test, y_test, algos, opt, algo_opts=None
         # Across every sample, take a majority of the votes
         # For now, we are not considering weights for Hard Voting, however,
         # in the future, we can use a similar probability matrix for implementing the same.
-        all_predictions = np.array(all_predictions, dtype=np.int32)
-        majority_pred = np.zeros(num_samples)
-        for sample in xrange(all_predictions.shape[1]):
-            majority_pred[sample] = np.bincount(all_predictions[:, sample]).argmax()
+        if algo_opts is "weighted":
+            # Train data is train_predictions
+            # Test data is all_predictions.
+            if num_classifiers == 1:
+                majority_pred = np.array(all_predictions[0,:])
+                c = np.sum(majority_pred == y_test)
+                accuracy = c *100.0 / num_samples
+                return accuracy, majority_pred
 
-        majority_pred = majority_pred.T
-        majority_pred = np.array(majority_pred, dtype=np.int32)
-        c = np.sum(majority_pred == y_test)
-        accuracy = c * 100.0 / num_samples
-        print accuracy, majority_pred
-        return accuracy, majority_pred
+            """
+
+            clf = MLPClassifier(solver='lbfgs', alpha=1e-5, random_state=1)
+            print train_predictions.shape, y_train.shape
+            clf.fit(train_predictions.T, y_train)
+            """
+            clf = tree.DecisionTreeClassifier()
+            clf.fit(train_predictions.T, y_train)
+            majority_pred = clf.predict(all_predictions.T)
+            majority_pred = np.array(majority_pred, dtype=np.int32)
+            c = np.sum(majority_pred == y_test)
+            accuracy = c *100.0 / num_samples
+            print accuracy, majority_pred
+            return accuracy, majority_pred
+
+        else:
+            all_predictions = np.array(all_predictions, dtype=np.int32)
+            majority_pred = np.zeros(num_samples)
+            for sample in xrange(all_predictions.shape[1]):
+                majority_pred[sample] = np.bincount(all_predictions[:, sample]).argmax()
+
+            majority_pred = majority_pred.T
+            majority_pred = np.array(majority_pred, dtype=np.int32)
+            c = np.sum(majority_pred == y_test)
+            accuracy = c * 100.0 / num_samples
+            print accuracy, majority_pred
+            return accuracy, majority_pred
 
 def assemble_parallel(X_train, y_train, X_test, y_test, opt, algo_opts=None):
   """ Receives the training and test set samples and

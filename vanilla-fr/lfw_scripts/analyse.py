@@ -7,24 +7,19 @@ import numpy as np
 def getAlgoBounds():
     args = sys.argv[1:]
 
-    for idx, f in enumerate(args):
+    for idx, f in enumerate(args[:-2]):
         data = np.genfromtxt(f, delimiter=',')
         print data.shape
         colnames = data.dtype.names
-        if idx == 0:
-            consolidated = data
-        else:
-            consolidated = np.concatenate((consolidated, data))
+        all_max = np.max(data, axis=1)
+        print f, np.mean(all_max), np.std(all_max)
 
-    # Calculate stats
-    print consolidated.shape
+        print data.shape
 
-    all_max = np.max(consolidated[:, 0:-1], axis=1)
-    print "ensemble", all_max, np.mean(all_max), np.std(all_max)
-
-    print "svm", np.mean(consolidated[:,-1]), np.std(consolidated[:,-1])
-
-    print np.sum(all_max > consolidated[:,-1])
+    lda_dat = np.genfromtxt(args[-1], delimiter=',')
+    svm_dat = np.genfromtxt(args[-2], delimiter=',')
+    print "svm ", np.mean(svm_dat), np.std(svm_dat) 
+    print "lda ", np.mean(lda_dat), np.std(lda_dat) 
 
 if __name__ == '__main__':
     getAlgoBounds()

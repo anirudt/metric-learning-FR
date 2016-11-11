@@ -2,7 +2,7 @@
 tags
 *.swp
 links
-papers
 *.csv
+papers
 caffe
 *.mat
